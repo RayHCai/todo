@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TodoScope {
+  DAY
+  WEEK
+}
+
+model Todo {
+  id          String    @id @default(cuid())
+  title       String    @db.VarChar(200)
+  notes       String?   @db.VarChar(2000)
+  scope       TodoScope
+  date        DateTime  @db.Date // DAY: the day. WEEK: the Sunday of that week.
+  position    Float // ordering within its list (fractional for cheap reorder)
+  completedAt DateTime? @db.Timestamptz
+  completedOn DateTime? @db.Date // user-local date it was completed
+  createdAt   DateTime  @default(now()) @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @db.Timestamptz
+
+  @@index([scope, date])
+  @@index([completedOn])
+}
+
+model Goal {
+  id          String    @id @default(cuid())
+  title       String    @db.VarChar(200)
+  description String?   @db.VarChar(2000)
+  color       String    @db.VarChar(20) // palette token, validated against GoalColor in shared/
+  month       DateTime  @db.Date // always the 1st of the month
+  position    Float
+  completedAt DateTime? @db.Timestamptz
+  completedOn DateTime? @db.Date
+  createdAt   DateTime  @default(now()) @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @db.Timestamptz
+
+  @@index([month])
+  @@index([completedOn])
+}
+
+model Session {
+  id                  String   @id @default(cuid())
+  tokenHash           String   @unique
+  passwordFingerprint String
+  createdAt           DateTime @default(now()) @db.Timestamptz
+  lastSeenAt          DateTime @default(now()) @db.Timestamptz
+  expiresAt           DateTime @db.Timestamptz
+
+  @@index([expiresAt])
+}
