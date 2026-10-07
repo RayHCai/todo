@@ -12,7 +12,6 @@
   --line: rgba(255, 255, 255, 0.1);
   --hover: rgba(255, 255, 255, 0.055);
   --scrim: rgba(10, 10, 10, 0.55);
-  --focus: #5aa0e8;
   --danger: #e0806f;
   --shimmer: rgba(255, 255, 255, 0.06);
 
@@ -47,7 +46,6 @@
   --line: rgba(55, 53, 47, 0.1);
   --hover: rgba(55, 53, 47, 0.05);
   --scrim: rgba(251, 251, 250, 0.6);
-  --focus: #2383e2;
   --danger: #c4553f;
   --shimmer: rgba(55, 53, 47, 0.06);
   --goal-amber: #c0841f;
