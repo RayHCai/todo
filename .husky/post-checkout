@@ -1,0 +1,4 @@
+# Reinstall when switching to a branch with a different lockfile ($3 = 1 on branch checkouts).
+if [ "$3" = "1" ] && git diff --name-only "$1" "$2" | grep -qx pnpm-lock.yaml; then
+  pnpm install --frozen-lockfile
+fi
