@@ -8,9 +8,9 @@ RUN corepack enable && apt-get update && apt-get install -y --no-install-recomme
 FROM base AS build
 WORKDIR /repo
 COPY . .
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 RUN pnpm build
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter @todo/server deploy --prod /out/apps/server \
+RUN pnpm --filter @todo/server deploy --prod /out/apps/server \
   && cd /out/apps/server && node_modules/.bin/prisma generate
 
 FROM base AS runtime
