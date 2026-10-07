@@ -1,15 +1,8 @@
 import type { Goal } from "@todo/shared";
 import useEmblaCarousel from "embla-carousel-react";
+import { WheelGesturesPlugin } from "embla-carousel-wheel-gestures";
 import { AnimatePresence, LayoutGroup, motion, useMotionValue, useSpring } from "motion/react";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type PointerEvent,
-  type WheelEvent,
-} from "react";
+import { useCallback, useEffect, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { useToggleComplete } from "../../api/mutations";
 import { keyOf } from "../../lib/keys";
 import { Roll } from "../../motion/Roll";
@@ -42,7 +35,10 @@ export function GoalsCarousel({ active, completed }: { active: Goal[]; completed
     }
   }, []);
 
-  const [viewportRef, embla] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps", skipSnaps: false });
+  // Trackpad swipes drag the track like a finger would, then settle on the nearest snap.
+  const [viewportRef, embla] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps", skipSnaps: false }, [
+    WheelGesturesPlugin(),
+  ]);
   const [snaps, setSnaps] = useState<number[]>([]);
   const [index, setIndex] = useState(0);
   const [canPrev, setCanPrev] = useState(false);
@@ -68,17 +64,6 @@ export function GoalsCarousel({ active, completed }: { active: Goal[]; completed
     const t = window.setTimeout(() => embla?.reInit(), 288);
     return () => window.clearTimeout(t);
   }, [embla, trayOpen, active.length, completed.length]);
-
-  const lastWheel = useRef(0);
-  function onWheel(e: WheelEvent) {
-    const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.shiftKey ? e.deltaY : 0;
-    if (Math.abs(dx) < 12 || !embla) return;
-    const now = performance.now();
-    if (now - lastWheel.current < 320) return;
-    lastWheel.current = now;
-    if (dx > 0) embla.scrollNext();
-    else embla.scrollPrev();
-  }
 
   function onKey(e: KeyboardEvent) {
     if (e.target !== e.currentTarget || !embla) return;
@@ -118,7 +103,6 @@ export function GoalsCarousel({ active, completed }: { active: Goal[]; completed
           role="region"
           aria-roledescription="carousel"
           aria-label="Goals. Use the arrow keys to move between them."
-          onWheel={onWheel}
           onKeyDown={onKey}
         >
           <LayoutGroup id="goals">

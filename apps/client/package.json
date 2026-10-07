@@ -17,6 +17,7 @@
     "@todo/shared": "workspace:*",
     "date-fns": "^4",
     "embla-carousel-react": "^8",
+    "embla-carousel-wheel-gestures": "^8",
     "motion": "^12",
     "react": "^19",
     "react-dom": "^19",

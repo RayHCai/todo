@@ -48,22 +48,26 @@
   position: relative;
 }
 
+/* Bleeds 16px left so each slide's leading gutter sits in the fade, never the card's edge.
+   clip, not hidden: a hidden box can still be scrolled natively (focus, new-card animations),
+   which stacks under Embla's transform and pushes the first card out of view. */
 .viewport {
   overflow: hidden;
-  margin: -6px -6px;
+  overflow: clip;
+  margin: -6px -6px -6px -16px;
   cursor: grab;
   /* Edge fade masks. */
-  mask-image: linear-gradient(90deg, transparent, #000 6px, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 28px), transparent);
 }
 
 .viewport:active {
   cursor: grabbing;
 }
 
+/* Embla aligns snaps to slide edges, so spacing lives on the slides, not on the track. */
 .track {
   display: flex;
-  gap: 16px;
-  padding: 6px;
+  padding: 6px 0;
   align-items: stretch;
   touch-action: pan-y pinch-zoom;
 }
@@ -72,10 +76,11 @@
   flex: none;
   min-width: 0;
   display: flex;
+  padding-left: 16px;
 }
 
 .traySlide {
-  padding-left: 8px;
+  padding-left: 24px;
   padding-right: 24px;
   align-items: center;
 }
