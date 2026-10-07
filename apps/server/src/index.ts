@@ -1,4 +1,3 @@
-import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
 import { buildApp } from "./app";
 import { loadDotEnv, parseEnv, type Env } from "./env";
@@ -16,13 +15,9 @@ function readEnv(): Env {
 const env = readEnv();
 const prisma = new PrismaClient({ datasourceUrl: env.DATABASE_URL });
 
-const app = await buildApp({
-  env,
-  prisma,
-  // In production Fastify serves the built client from the same origin, so no CORS is needed.
-  clientDistDir:
-    env.NODE_ENV === "production" ? fileURLToPath(new URL("../../client/dist/", import.meta.url)) : undefined,
-});
+// API only: the client is hosted separately and proxies `/api` here, so it stays same-origin
+// for the browser and no CORS is needed.
+const app = await buildApp({ env, prisma });
 
 async function shutdown(signal: NodeJS.Signals) {
   app.log.info({ signal }, "shutting down");

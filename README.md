@@ -10,13 +10,16 @@ flowchart LR
 
   agent["AI agent"] -- "MCP (stdio / HTTP)" --> mcp["apps/mcp<br/>MCP server"]
 
-  subgraph monolith["Docker image"]
-    server["apps/server<br/>Fastify 5 · Prisma"]
+  subgraph vercel["Vercel"]
     static["client/dist"]
   end
 
-  client -- "/api (session cookie)" --> server
-  server -- "serves SPA" --> static
+  subgraph railway["Railway"]
+    server["apps/server<br/>Fastify 5 · Prisma"]
+  end
+
+  static -- "serves SPA" --> client
+  client -- "/api (session cookie, rewritten by Vercel)" --> server
   mcp -- "/api (password login)" --> server
   server --> db[("PostgreSQL 16")]
 

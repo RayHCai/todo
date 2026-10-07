@@ -9,16 +9,15 @@ FROM base AS build
 WORKDIR /repo
 COPY . .
 RUN pnpm install --frozen-lockfile
-RUN pnpm build
+# Server and the workspace packages it depends on; the client deploys separately to Vercel.
+RUN pnpm --filter @todo/server... build
 RUN pnpm --filter @todo/server deploy --prod /out/apps/server \
   && cd /out/apps/server && node_modules/.bin/prisma generate
 
 FROM base AS runtime
 ENV NODE_ENV=production PORT=3000
 WORKDIR /app
-# The server resolves the client build at ../../client/dist relative to its own dist/.
 COPY --from=build --chown=node:node /out/apps/server apps/server
-COPY --from=build --chown=node:node /repo/apps/client/dist apps/client/dist
 USER node
 WORKDIR /app/apps/server
 EXPOSE 3000
