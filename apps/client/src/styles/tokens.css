@@ -1,0 +1,62 @@
+/*
+ * Ink Board tokens. The board is black by design; a light palette is available with
+ * `<html data-theme="light">`.
+ * Goal colors map the shared GoalColor enum to theme-aware values.
+ */
+:root {
+  --bg: #191919;
+  --bg-raised: #202020;
+  --ink: #e6e4df;
+  --ink-2: rgba(230, 228, 223, 0.6);
+  --ink-3: rgba(230, 228, 223, 0.38);
+  --line: rgba(255, 255, 255, 0.1);
+  --hover: rgba(255, 255, 255, 0.055);
+  --scrim: rgba(10, 10, 10, 0.55);
+  --focus: #5aa0e8;
+  --danger: #e0806f;
+  --shimmer: rgba(255, 255, 255, 0.06);
+
+  --goal-amber: #d9a65a;
+  --goal-coral: #d4796b;
+  --goal-rose: #d27a96;
+  --goal-violet: #9b88cf;
+  --goal-indigo: #7f86d6;
+  --goal-sky: #6f9bd1;
+  --goal-teal: #5aa8a3;
+  --goal-emerald: #63a57f;
+
+  --hand: "Architects Daughter", "Segoe Print", "Bradley Hand", cursive;
+  --body: "Source Sans 3", "Source Sans Pro", "Segoe UI", system-ui, sans-serif;
+
+  --r-card: 16px;
+  --r-row: 10px;
+  --dur-micro: 126ms;
+  --dur-base: 216ms;
+  --dur-large: 378ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: #fbfbfa;
+  --bg-raised: #ffffff;
+  --ink: #37352f;
+  --ink-2: rgba(55, 53, 47, 0.64);
+  --ink-3: rgba(55, 53, 47, 0.42);
+  --line: rgba(55, 53, 47, 0.1);
+  --hover: rgba(55, 53, 47, 0.05);
+  --scrim: rgba(251, 251, 250, 0.6);
+  --focus: #2383e2;
+  --danger: #c4553f;
+  --shimmer: rgba(55, 53, 47, 0.06);
+  --goal-amber: #c0841f;
+  --goal-coral: #d8694f;
+  --goal-rose: #c75479;
+  --goal-violet: #8a6fc9;
+  --goal-indigo: #5b62c4;
+  --goal-sky: #4a86c8;
+  --goal-teal: #2f8c86;
+  --goal-emerald: #4a9c6d;
+  color-scheme: light;
+}

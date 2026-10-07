@@ -1,0 +1,21 @@
+.roll {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  white-space: pre;
+}
+
+.sizer {
+  visibility: hidden;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+}
+
+.ch {
+  display: inline-block;
+}

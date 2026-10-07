@@ -1,0 +1,70 @@
+.cb {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--ink-3);
+  transition: color var(--dur-micro);
+}
+
+.ring {
+  width: 18px;
+  height: 18px;
+}
+
+.cb input {
+  position: absolute;
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.mark {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.cb:hover {
+  color: var(--ink-2);
+}
+
+.mark :global(.tick) {
+  stroke: var(--ink);
+  stroke-width: 2.1;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 180ms ease-out;
+}
+
+.cb input:checked ~ .mark :global(.tick) {
+  stroke-dashoffset: 0;
+}
+
+.cb input:focus-visible ~ .mark {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.flecks {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  pointer-events: none;
+}
+
+.fleck {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 1.6px;
+  border-radius: 1px;
+  background: currentColor;
+  transform-origin: left center;
+}

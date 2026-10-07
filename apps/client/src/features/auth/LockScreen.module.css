@@ -1,0 +1,271 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+/* While the curtains part, clicks go through to the board underneath. */
+.passThrough {
+  pointer-events: none;
+}
+
+.curtain {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/*
+ * Each curtain holds a viewport-sized scene so the two halves line up. The drift and the
+ * spotlight move by transform on their own layers, so the gradients are never repainted.
+ */
+.scene {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 200%;
+  pointer-events: none;
+}
+
+.top .scene {
+  top: 0;
+}
+
+.bottom .scene {
+  bottom: 0;
+}
+
+/* 10% oversized on every side so drifting never exposes an edge; gradient stops are remapped to match. */
+.scene::before,
+.scene::after {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  will-change: transform;
+  animation: 24s ease-in-out infinite alternate;
+}
+
+.scene::before {
+  background: radial-gradient(
+    60vmax 50vmax at 25% 33.333%,
+    color-mix(in srgb, var(--goal-indigo) 7%, transparent),
+    transparent 70%
+  );
+  animation-name: drift-a;
+}
+
+.scene::after {
+  background: radial-gradient(
+    50vmax 60vmax at 75% 66.667%,
+    color-mix(in srgb, var(--goal-amber) 5%, transparent),
+    transparent 70%
+  );
+  animation-name: drift-b;
+}
+
+@keyframes drift-a {
+  to {
+    transform: translate(6vw, -4vh);
+  }
+}
+
+@keyframes drift-b {
+  to {
+    transform: translate(-5vw, 5vh);
+  }
+}
+
+/* The cursor spotlight: a fixed-size gradient that JS moves with translate3d. */
+.spot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 840px;
+  height: 840px;
+  background: radial-gradient(circle closest-side, var(--hover), transparent 70%);
+  transform: translate3d(calc(50vw - 420px), calc(50vh - 420px), 0);
+  will-change: transform;
+}
+
+.curtain::after {
+  /* Film grain. */
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.top {
+  top: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.bottom {
+  bottom: 0;
+}
+
+.form {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: min(300px, calc(100vw - 48px));
+}
+
+.glyph {
+  width: 34px;
+  height: 34px;
+  color: var(--ink-2);
+}
+
+.field {
+  position: relative;
+  width: 100%;
+  height: 44px;
+}
+
+.input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  padding: 0 8px;
+  color: transparent;
+  caret-color: transparent;
+  font-size: 22px;
+  letter-spacing: 0.5em;
+  text-align: center;
+}
+
+.input:focus-visible {
+  outline: none;
+  animation: none;
+}
+
+.field:focus-within .underline {
+  color: var(--ink);
+}
+
+.dots {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+/* The native caret is hidden, so draw one that follows the dots. */
+.caret {
+  display: none;
+  width: 1.5px;
+  height: 22px;
+  border-radius: 1px;
+  background: var(--ink);
+  animation: blink 1.06s steps(1) infinite;
+}
+
+.field:focus-within .caret {
+  display: block;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret,
+  .scene::before,
+  .scene::after {
+    animation: none;
+  }
+}
+
+.falling {
+  position: absolute;
+  left: calc(50% - 5px);
+}
+
+.check {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  left: calc(50% - 17px);
+  stroke-width: 2.4;
+}
+
+.underline {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 8px;
+  color: var(--ink-3);
+  transition: color var(--dur-base);
+}
+
+.wrong .underline {
+  animation: pulse-error 630ms ease-out;
+}
+
+@keyframes pulse-error {
+  0%,
+  40% {
+    color: var(--danger);
+  }
+}
+
+.error {
+  margin: -8px 0 0;
+  min-height: 1.2em;
+  font: 400 15px/1.2 var(--hand);
+  color: var(--danger);
+  text-align: center;
+}
+
+.unlock {
+  padding: 6px 16px;
+  font: 400 18px/1.2 var(--hand);
+  color: var(--ink-2);
+  transition:
+    color var(--dur-micro),
+    background var(--dur-micro);
+}
+
+.unlock:hover:not(:disabled) {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.unlock:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.padlock {
+  position: relative;
+  z-index: 1;
+  width: min(30vmin, 160px);
+  height: min(30vmin, 160px);
+  stroke-width: 0.36;
+  color: var(--ink);
+  opacity: 0.85;
+}

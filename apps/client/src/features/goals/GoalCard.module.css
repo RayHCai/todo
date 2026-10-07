@@ -1,0 +1,150 @@
+.card {
+  position: relative;
+  flex: none;
+  width: 256px;
+  height: 152px;
+  perspective: 900px;
+  user-select: none;
+}
+
+.inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.front,
+.back {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 16px 18px 14px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.back {
+  transform: rotateY(180deg);
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.frame {
+  stroke-width: 2.2;
+  opacity: 0.5;
+  transition: opacity var(--dur-micro);
+}
+
+.card:hover .frame,
+.back .frame {
+  opacity: 0.95;
+}
+
+.title {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+  font: 400 20px/1.25 var(--hand);
+  color: var(--ink);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: text;
+}
+
+.title:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--ink-3);
+  text-underline-offset: 4px;
+}
+
+.desc {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 13.5px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.foot {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tag {
+  font: 400 12px/1 var(--hand);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.mark {
+  width: 40px;
+  height: 40px;
+  stroke-width: 2.2;
+}
+
+.achieved {
+  font: 400 20px/1.2 var(--hand);
+  color: var(--ink);
+}
+
+.landed::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: var(--r-card);
+  box-shadow:
+    0 0 0 1px currentColor,
+    0 0 28px -4px currentColor;
+  opacity: 0;
+  animation: glow 0.99s ease-out;
+  pointer-events: none;
+}
+
+@keyframes glow {
+  0%,
+  20% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.ghost {
+  display: grid;
+  place-items: center;
+  padding: 20px 24px;
+  color: var(--ink-3);
+  text-align: center;
+  transition: color var(--dur-micro);
+}
+
+.ghost .frame {
+  stroke-dasharray: 6 6;
+}
+
+.ghost:hover {
+  color: var(--ink-2);
+}
+
+.ghostText {
+  font: 400 17px/1.35 var(--hand);
+}
+
+@media (max-width: 639px) {
+  .card {
+    width: min(256px, calc(100vw - 64px));
+  }
+}

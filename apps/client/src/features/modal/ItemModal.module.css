@@ -1,0 +1,235 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.panel {
+  --accent: var(--ink);
+  position: relative;
+  width: min(520px, 100%);
+  padding: 22px 24px 18px;
+  background: var(--bg-raised);
+  border-radius: var(--r-card);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 20px 60px -12px rgba(0, 0, 0, 0.5);
+  color: var(--ink);
+  transform-origin: center;
+}
+
+.frame {
+  color: var(--accent);
+  stroke-width: 2;
+  opacity: 0.55;
+  transition: color var(--dur-base);
+}
+
+.handle {
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin: -8px auto 14px;
+  border-radius: 2px;
+  background: var(--ink-3);
+}
+
+.form,
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--hover);
+  max-width: 100%;
+  overflow-x: auto;
+  /* The pill's spring overshoot briefly overflows; keep it scrollable on narrow screens but never show a bar. */
+  scrollbar-width: none;
+}
+
+.segmented::-webkit-scrollbar {
+  display: none;
+}
+
+.segment {
+  position: relative;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font: 400 15px/1.2 var(--hand);
+  color: var(--ink-3);
+  white-space: nowrap;
+  transition: color var(--dur-micro);
+}
+
+.segment[aria-checked="true"] {
+  color: var(--ink);
+}
+
+.segment:hover {
+  color: var(--ink-2);
+}
+
+.pill {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+  transition: box-shadow var(--dur-base);
+}
+
+.segLabel {
+  position: relative;
+}
+
+.titleField {
+  position: relative;
+}
+
+.title {
+  width: 100%;
+  padding: 4px 0;
+  font: 400 26px/1.25 var(--hand);
+  border-bottom: 1px solid var(--line);
+  transition: border-color var(--dur-base);
+}
+
+.title:focus {
+  border-bottom-color: var(--accent);
+}
+
+.title:focus-visible {
+  outline: none;
+  animation: none;
+}
+
+.error {
+  margin: 6px 0 0;
+  font: 400 14px/1.2 var(--hand);
+  color: var(--danger);
+}
+
+.notes {
+  width: 100%;
+  min-height: 48px;
+  padding: 0;
+  resize: none;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.notes:focus-visible {
+  outline: none;
+  animation: none;
+}
+
+.colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 2px;
+}
+
+.swatch {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.chip {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: currentColor;
+  transition: transform var(--dur-micro) var(--ease-out);
+}
+
+.swatch:hover .chip {
+  transform: scale(1.18);
+}
+
+.ring {
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-height: 38px;
+}
+
+.secondary,
+.primary {
+  padding: 6px 14px;
+  font: 400 16px/1.2 var(--hand);
+  border-radius: 8px;
+  transition:
+    background var(--dur-micro),
+    color var(--dur-micro);
+}
+
+.secondary {
+  color: var(--ink-2);
+}
+
+.secondary:hover {
+  background: var(--hover);
+  color: var(--ink);
+}
+
+.delete {
+  margin-right: auto;
+  color: var(--danger);
+}
+
+.primary {
+  min-width: 72px;
+  display: inline-grid;
+  place-items: center;
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.primary:hover {
+  background: color-mix(in srgb, var(--ink) 88%, var(--bg));
+}
+
+@media (max-width: 639px) {
+  .root {
+    place-items: end stretch;
+    padding: 0;
+  }
+
+  .panel {
+    width: 100%;
+    border-radius: var(--r-card) var(--r-card) 0 0;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    touch-action: none;
+  }
+}

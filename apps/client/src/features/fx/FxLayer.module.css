@@ -1,0 +1,27 @@
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  color: var(--ink);
+}
+
+.svg {
+  position: absolute;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.full {
+  position: absolute;
+  inset: 0;
+}
+
+.wash {
+  position: absolute;
+  border-radius: 50%;
+}

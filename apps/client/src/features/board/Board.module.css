@@ -1,0 +1,132 @@
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 1120px;
+  height: 100%;
+  margin: 0 auto;
+  padding-block: 40px 24px;
+  padding-inline: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  min-height: 0;
+}
+
+.columns {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 40px;
+}
+
+.colWrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.colWrap > * {
+  flex: 1;
+}
+
+.tabs {
+  display: none;
+}
+
+.failed {
+  height: 100%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  font: 400 18px/1.4 var(--hand);
+  color: var(--ink-2);
+}
+
+.failed button {
+  padding: 6px 14px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--hover);
+}
+
+@media (max-width: 1023px) {
+  .page {
+    padding-inline: 32px;
+    gap: 24px;
+  }
+
+  .columns {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 639px) {
+  .page {
+    height: auto;
+    min-height: 100%;
+    padding-inline: 16px;
+    padding-block: 24px;
+    gap: 20px;
+  }
+
+  .tabs {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 2;
+    display: flex;
+    gap: 4px;
+    padding: 6px 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .tab {
+    position: relative;
+    padding: 6px 12px;
+    font: 400 17px/1.2 var(--hand);
+    color: var(--ink-3);
+    transition: color var(--dur-micro);
+  }
+
+  .tab[aria-selected="true"] {
+    color: var(--ink);
+  }
+
+  .tabLabel {
+    position: relative;
+  }
+
+  .indicator {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: -7px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--ink);
+  }
+
+  .columns {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    margin-inline: -16px;
+  }
+
+  .columns::-webkit-scrollbar {
+    display: none;
+  }
+
+  .colWrap {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    padding-inline: 16px;
+  }
+}

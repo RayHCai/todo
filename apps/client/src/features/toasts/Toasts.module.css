@@ -1,0 +1,80 @@
+.region {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 60;
+  display: grid;
+  justify-items: center;
+  width: min(440px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.toast {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 10px 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-raised);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  pointer-events: auto;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.error {
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+}
+
+.message {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.action {
+  padding: 4px 10px;
+  font: 400 15px/1.2 var(--hand);
+  color: var(--ink);
+  transition: background var(--dur-micro);
+}
+
+.action:hover {
+  background: var(--hover);
+}
+
+.close {
+  width: 26px;
+  height: 26px;
+  color: var(--ink-3);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.close:hover {
+  color: var(--ink);
+}
+
+.bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  background: var(--ink-3);
+  transform-origin: left;
+  animation: shrink linear forwards;
+}
+
+@keyframes shrink {
+  to {
+    transform: scaleX(0);
+  }
+}

@@ -1,0 +1,213 @@
+.col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 4px 6px 14px;
+  text-align: left;
+  transition: background var(--dur-micro);
+}
+
+.head:hover {
+  background: var(--hover);
+}
+
+.label {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  margin-right: auto;
+}
+
+.name {
+  font: 400 22px/1.1 var(--hand);
+  white-space: nowrap;
+  transition: letter-spacing var(--dur-base) var(--ease-out);
+}
+
+.head:hover .name {
+  letter-spacing: 0.02em;
+}
+
+.date {
+  min-width: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.line {
+  position: absolute;
+  left: -2px;
+  bottom: -9px;
+  width: calc(100% + 4px);
+  height: 6px;
+  color: var(--ink-2);
+  opacity: 0.7;
+  clip-path: inset(0 100% 0 0);
+  animation: draw-line 468ms ease-out forwards;
+}
+
+@keyframes draw-line {
+  to {
+    clip-path: inset(0 -2px 0 -2px);
+  }
+}
+
+.plus {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  color: var(--ink-3);
+  opacity: 0;
+  transform: translateX(8px) rotate(-90deg);
+  transition:
+    opacity var(--dur-micro),
+    transform var(--dur-base) var(--ease-out);
+}
+
+.plus svg {
+  width: 12px;
+  height: 12px;
+}
+
+.head:hover .plus,
+.head:focus-visible .plus {
+  opacity: 1;
+  transform: none;
+}
+
+.body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 2px 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+  border-top: 1px solid transparent;
+  transition: border-color var(--dur-base);
+  --fade-top: 0px;
+  --fade-bottom: 0px;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 var(--fade-top),
+    #000 calc(100% - var(--fade-bottom)),
+    transparent
+  );
+}
+
+.body[data-top] {
+  --fade-top: 24px;
+  border-top-color: var(--line);
+}
+
+.body[data-bottom] {
+  --fade-bottom: 32px;
+}
+
+.body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.body::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 3px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.doneHead {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 2px;
+  padding: 4px 8px;
+  font: 400 14px/1.2 var(--hand);
+  color: var(--ink-3);
+  transition:
+    background var(--dur-micro),
+    color var(--dur-micro);
+}
+
+.doneHead:hover {
+  background: var(--hover);
+  color: var(--ink-2);
+}
+
+.chev {
+  width: 10px;
+  height: 10px;
+  transition: transform var(--dur-micro);
+}
+
+.doneHead[aria-expanded="false"] .chev {
+  transform: rotate(-90deg);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 28px 12px;
+  color: var(--ink-3);
+  font: 400 16px/1.3 var(--hand);
+  transition: color var(--dur-micro);
+}
+
+.empty:hover {
+  color: var(--ink-2);
+}
+
+.sheet {
+  width: 64px;
+  height: 64px;
+  stroke-width: 1.5;
+}
+
+.pencil {
+  animation: bob 3.2s ease-in-out infinite;
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  50% {
+    translate: -3px -4px;
+    rotate: -4deg;
+  }
+}
+
+/* On phones the page scrolls, not the column. */
+@media (max-width: 639px) {
+  .body {
+    overflow: visible;
+    mask-image: none;
+  }
+
+  .plus {
+    opacity: 1;
+    transform: none;
+  }
+}
