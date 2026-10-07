@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:22-slim AS base
+FROM node:25-slim AS base
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH HUSKY=0
 RUN corepack enable && apt-get update && apt-get install -y --no-install-recommends openssl \
   && rm -rf /var/lib/apt/lists/*
