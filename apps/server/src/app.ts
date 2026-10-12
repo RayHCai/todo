@@ -13,10 +13,14 @@ import { authRoutes } from "./auth/routes";
 import { createSessionStore } from "./auth/sessions";
 import type { Env } from "./env";
 import { notFound, rateLimited, registerErrorHandling } from "./lib/errors";
+import { createResendMailer, type Mailer } from "./reminders/mailer";
+import { startReminderSchedule } from "./reminders/scheduler";
+import { createReminders } from "./reminders/service";
 import { boardRoutes } from "./routes/board";
 import { goalRoutes } from "./routes/goals";
 import { healthRoutes } from "./routes/health";
 import { historyRoutes } from "./routes/history";
+import { reminderRoutes } from "./routes/reminders";
 import { todoRoutes } from "./routes/todos";
 
 declare module "fastify" {
@@ -34,6 +38,10 @@ export interface AppOptions {
   loginFailureDelayMs?: number;
   /** Built client to serve with an SPA fallback. Omit to serve the API only. */
   clientDistDir?: string;
+  /** Sends reminder emails. Defaults to Resend when RESEND_API_KEY is set; tests pass a fake. */
+  mailer?: Mailer | null;
+  /** Run the reminder cron jobs when email is configured. Defaults to on outside tests. */
+  scheduleReminders?: boolean;
 }
 
 const BODY_LIMIT_BYTES = 16 * 1024;
@@ -43,7 +51,7 @@ export function defaultLogger(env: Env): FastifyServerOptions["logger"] {
   return {
     level: env.NODE_ENV === "production" ? "info" : "debug",
     redact: {
-      paths: ["req.body.password", "req.headers.cookie", 'res.headers["set-cookie"]'],
+      paths: ["req.body.password", "req.headers.cookie", "req.headers.authorization", 'res.headers["set-cookie"]'],
       censor: "[redacted]",
     },
   };
@@ -91,6 +99,18 @@ export async function buildApp(options: AppOptions) {
   purgeTimer.unref();
   app.addHook("onClose", async () => clearInterval(purgeTimer));
 
+  const mailer =
+    options.mailer !== undefined
+      ? options.mailer
+      : env.RESEND_API_KEY
+        ? createResendMailer({ apiKey: env.RESEND_API_KEY, from: env.REMINDER_EMAIL_FROM })
+        : null;
+  const reminders = createReminders({ prisma, mailer, to: env.REMINDER_EMAIL_TO, timeZone: env.REMINDER_TIMEZONE });
+  if (reminders.canSend && (options.scheduleReminders ?? env.NODE_ENV !== "test")) {
+    const stopReminders = startReminderSchedule(reminders, app.log);
+    app.addHook("onClose", async () => stopReminders());
+  }
+
   await app.register(
     async (api) => {
       // Public: health, login, session check.
@@ -101,6 +121,10 @@ export async function buildApp(options: AppOptions) {
         sessions,
         loginFailureDelayMs: options.loginFailureDelayMs ?? 500,
       });
+
+      // Manual reminder sends authenticate with their own bearer secret, not a session.
+      const reminderSecret = env.REMINDER_SECRET;
+      if (reminderSecret) await api.register(reminderRoutes, { reminders, secret: reminderSecret });
 
       // Everything else under /api requires a session.
       await api.register(async (guarded) => {

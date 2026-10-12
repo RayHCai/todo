@@ -4,4 +4,5 @@ export * from "./errors";
 export * from "./goals";
 export * from "./history";
 export * from "./primitives";
+export * from "./reminders";
 export * from "./todos";
