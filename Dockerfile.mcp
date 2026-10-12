@@ -1,0 +1,24 @@
+# syntax=docker/dockerfile:1
+
+FROM node:22-slim AS base
+ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH HUSKY=0
+RUN corepack enable
+
+FROM base AS build
+WORKDIR /repo
+COPY . .
+RUN pnpm install --frozen-lockfile
+# MCP server and the workspace packages it depends on.
+RUN pnpm --filter @todo/mcp... build
+RUN pnpm --filter @todo/mcp deploy --prod /out/apps/mcp
+
+FROM base AS runtime
+ENV NODE_ENV=production MCP_TRANSPORT=http PORT=3001
+WORKDIR /app
+COPY --from=build --chown=node:node /out/apps/mcp apps/mcp
+USER node
+WORKDIR /app/apps/mcp
+EXPOSE 3001
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
+  CMD node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
+CMD ["node", "dist/index.js"]
