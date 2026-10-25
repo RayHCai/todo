@@ -224,15 +224,19 @@ function EmptyState({ column, onOpen }: { column: ColumnKey; onOpen: () => void 
   }, [column]);
   return (
     <button className={styles.empty} onClick={onOpen}>
-      <svg className={`sk ${styles.sheet}`} viewBox="-6 -10 72 74" aria-hidden="true">
-        <path d={paths.sheet} />
-        {paths.lines.map((d, i) => (
-          <path key={i} d={d} opacity={0.6} />
-        ))}
-        <g className={styles.pencil} transform="translate(38 44)">
-          <path d={paths.pencil} />
-        </g>
-      </svg>
+      {/* The pencil is its own <svg> laid over the sheet: animating an element inside an SVG
+          repaints it every frame, while an HTML-level box can be moved by the compositor. */}
+      <span className={styles.art} aria-hidden="true">
+        <svg className={`sk ${styles.sheet}`} viewBox="-6 -10 72 74">
+          <path d={paths.sheet} />
+          {paths.lines.map((d, i) => (
+            <path key={i} d={d} opacity={0.6} />
+          ))}
+        </svg>
+        <svg className={`sk ${styles.sheet} ${styles.pencil}`} viewBox="-6 -10 72 74">
+          <path d={paths.pencil} transform="translate(38 44)" />
+        </svg>
+      </span>
       <span>{EMPTY_COPY[column]}</span>
     </button>
   );

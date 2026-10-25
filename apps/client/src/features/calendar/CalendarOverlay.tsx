@@ -29,7 +29,9 @@ const MONTHS_AHEAD = 12;
 export function CalendarOverlay() {
   const calendar = useUi((s) => s.calendar);
   const origin = calendar?.origin;
-  const reveal = (r: string) => `circle(${r} at ${origin ? `${origin.x}px ${origin.y}px` : "calc(100% - 40px) 40px"})`;
+  // Grows out of the calendar icon. A full-viewport clip-path reveal would repaint the whole grid
+  // every frame; a `transform` string plus opacity runs on the compositor instead.
+  const transformOrigin = origin ? `${origin.x}px ${origin.y}px` : "calc(100% - 40px) 40px";
   return (
     <AnimatePresence>
       {calendar && (
@@ -39,9 +41,10 @@ export function CalendarOverlay() {
           role="dialog"
           aria-modal="true"
           aria-label="History calendar"
-          initial={{ clipPath: reveal("0px") }}
-          animate={{ clipPath: reveal("150vmax") }}
-          exit={{ clipPath: reveal("0px") }}
+          style={{ transformOrigin }}
+          initial={{ opacity: 0, transform: "scale(0.94)" }}
+          animate={{ opacity: 1, transform: "scale(1)" }}
+          exit={{ opacity: 0, transform: "scale(0.94)" }}
           transition={{ duration: 0.378, ease: [0.22, 1, 0.36, 1] }}
         >
           <Calendar initialMonth={calendar.month} />

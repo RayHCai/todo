@@ -64,6 +64,12 @@
   cursor: grabbing;
 }
 
+/* While a trackpad swipe drags the track, cards sliding under a still cursor would each start
+   and cancel their hover spring; skip hit-testing until the gesture ends. */
+.viewport:global(.is-wheel-dragging) .track {
+  pointer-events: none;
+}
+
 /* Embla aligns snaps to slide edges, so spacing lives on the slides, not on the track. */
 .track {
   display: flex;

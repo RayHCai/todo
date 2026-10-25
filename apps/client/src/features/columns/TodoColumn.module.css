@@ -183,7 +183,14 @@
   stroke-width: 1.5;
 }
 
+.art {
+  position: relative;
+}
+
 .pencil {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
   animation: bob 3.2s ease-in-out infinite;
 }
 
