@@ -1,7 +1,9 @@
-import type { Goal, Todo } from "@todo/shared";
+import type { Goal, HistoryResponse, Todo } from "@todo/shared";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { useHistoryMonths } from "../../api/queries";
+import { api, ApiError } from "../../api/http";
+import { historyKey, useHistoryMonths } from "../../api/queries";
 import {
   daysOfWeek,
   fromIso,
@@ -65,6 +67,7 @@ function Calendar({ initialMonth }: { initialMonth: MonthKey }) {
   }));
   const [focused, setFocused] = useState<MonthKey>(initialMonth);
   const [detail, setDetail] = useState<IsoDate | null>(null);
+  const [weekDetail, setWeekDetail] = useState<IsoDate | null>(null);
   const [pulse, setPulse] = useState(0);
   const [openWeeks, setOpenWeeks] = useState<Set<IsoDate>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -217,6 +220,7 @@ function Calendar({ initialMonth }: { initialMonth: MonthKey }) {
       if (e.key === "Escape") {
         e.preventDefault();
         if (detail) setDetail(null);
+        else if (weekDetail) setWeekDetail(null);
         else close();
       } else if (typing || e.metaKey || e.ctrlKey || e.altKey) {
         return;
@@ -273,7 +277,7 @@ function Calendar({ initialMonth }: { initialMonth: MonthKey }) {
         ref={scrollRef}
         className={styles.scroll}
         onScroll={onScroll}
-        animate={detail ? { scale: 0.98, opacity: 0.45 } : { scale: 1, opacity: 1 }}
+        animate={detail || weekDetail ? { scale: 0.98, opacity: 0.45 } : { scale: 1, opacity: 1 }}
         transition={spring.smooth}
         role="grid"
         aria-label="Days"
@@ -300,6 +304,7 @@ function Calendar({ initialMonth }: { initialMonth: MonthKey }) {
                 weekOpen={openWeeks.has(w)}
                 onToggleWeek={toggleWeek}
                 onOpenDay={setDetail}
+                onOpenWeek={setWeekDetail}
               />
             </div>
           );
@@ -315,6 +320,15 @@ function Calendar({ initialMonth }: { initialMonth: MonthKey }) {
             entry={index.days.get(detail)}
             today={today}
             onClose={() => setDetail(null)}
+          />
+        )}
+        {weekDetail && (
+          <WeekDetail
+            key={weekDetail}
+            weekStart={weekDetail}
+            week={index.weeks.get(weekDetail)}
+            today={today}
+            onClose={() => setWeekDetail(null)}
           />
         )}
       </AnimatePresence>
@@ -356,6 +370,7 @@ interface RowProps {
   weekOpen: boolean;
   onToggleWeek: (weekStart: IsoDate) => void;
   onOpenDay: (day: IsoDate) => void;
+  onOpenWeek: (weekStart: IsoDate) => void;
 }
 
 /**
@@ -372,6 +387,7 @@ const WeekRow = memo(function WeekRow({
   weekOpen,
   onToggleWeek,
   onOpenDay,
+  onOpenWeek,
 }: RowProps) {
   const days = useMemo(() => daysOfWeek(weekStart), [weekStart]);
   const week = index.weeks.get(weekStart);
@@ -391,9 +407,16 @@ const WeekRow = memo(function WeekRow({
           onOpen={onOpenDay}
         />
       ))}
-      <div className={styles.weekCell} role="gridcell" aria-label={`Week of ${weekRangeLabel(weekStart)}`}>
+      <motion.button
+        layoutId={`week-${weekStart}`}
+        className={styles.weekCell}
+        role="gridcell"
+        aria-label={`Week of ${weekRangeLabel(weekStart)}: ${week?.done.length ?? 0} completed, ${weekItems.length} items`}
+        onClick={() => onOpenWeek(weekStart)}
+        transition={spring.smooth}
+      >
         <WeekItems items={weekItems} />
-      </div>
+      </motion.button>
       {weekItems.length > 0 && (
         <div className={styles.weekStrip}>
           <button className={styles.weekToggle} aria-expanded={weekOpen} onClick={() => onToggleWeek(weekStart)}>
@@ -529,6 +552,7 @@ function DayDetail({
           </button>
         </div>
         {!any && <p className={styles.nothing}>Nothing planned or done.</p>}
+        {day >= today && <AddToDay day={day} />}
         {groups.map(
           ([title, items]) =>
             items.length > 0 && (
@@ -557,5 +581,121 @@ function DayDetail({
         )}
       </motion.div>
     </div>
+  );
+}
+
+function WeekDetail({
+  weekStart,
+  week,
+  today,
+  onClose,
+}: {
+  weekStart: IsoDate;
+  week: { done: Todo[]; open: Todo[] } | undefined;
+  today: IsoDate;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => ref.current?.focus(), []);
+  const past = daysOfWeek(weekStart)[6]! < today;
+  const groups: [string, Todo[]][] = [
+    ["Completed", week?.done ?? []],
+    [past ? "Unfinished" : "Open", week?.open ?? []],
+  ];
+  const any = groups.some(([, items]) => items.length > 0);
+  const label = `Week of ${weekRangeLabel(weekStart)}`;
+  return (
+    <div className={styles.detailRoot}>
+      <motion.div
+        className={styles.detailBackdrop}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+      />
+      <motion.div
+        ref={ref}
+        layoutId={`week-${weekStart}`}
+        className={styles.detail}
+        role="dialog"
+        aria-label={label}
+        tabIndex={-1}
+        transition={spring.smooth}
+      >
+        <Frame seed={`week-detail-${weekStart}`} className={styles.detailFrame} a={1.3} />
+        <div className={styles.detailHead}>
+          <h3>{label}</h3>
+          <button className={styles.iconBtn} aria-label="Close week" onClick={onClose}>
+            <CloseIcon />
+          </button>
+        </div>
+        {!any && <p className={styles.nothing}>Nothing planned this week.</p>}
+        {groups.map(
+          ([title, items]) =>
+            items.length > 0 && (
+              <section key={title} className={styles.group}>
+                <h4>
+                  {title} <span className="tabular">{items.length}</span>
+                </h4>
+                <ul>
+                  {items.map((t) => (
+                    <li key={t.id} className={title === "Completed" ? styles.itemDone : undefined}>
+                      <span>{t.title}</span>
+                      {t.completedOn && (
+                        <span className={styles.when}>
+                          done{" "}
+                          {fromIso(t.completedOn).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ),
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
+/** Plans a DAY todo for today or a future day. Left unchecked, it carries over like any other. */
+function AddToDay({ day }: { day: IsoDate }) {
+  const qc = useQueryClient();
+  const [title, setTitle] = useState("");
+  const add = useMutation({
+    mutationFn: (clean: string) => api.createTodo({ title: clean, scope: "DAY", date: day }),
+    onSuccess: (todo) => {
+      // Show it in the detail right away; the refetch confirms it.
+      qc.setQueryData<HistoryResponse>(historyKey(monthKey(day)), (h) => (h ? { ...h, todos: [...h.todos, todo] } : h));
+      void qc.invalidateQueries({ queryKey: ["history"] });
+      void qc.invalidateQueries({ queryKey: ["board"] });
+    },
+    onError: (err) =>
+      useUi.getState().pushToast({
+        tone: "error",
+        message: `Couldn't add that. ${err instanceof ApiError ? err.message : "Something went wrong."}`,
+      }),
+  });
+  return (
+    <form
+      className={styles.add}
+      onSubmit={(e) => {
+        e.preventDefault();
+        const clean = title.trim();
+        if (!clean || add.isPending) return;
+        add.mutate(clean, { onSuccess: () => setTitle("") });
+      }}
+    >
+      <input
+        value={title}
+        maxLength={200}
+        placeholder="Add a task for this day"
+        aria-label={`New task for ${longDayLabel(day)}`}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+      <button type="submit" className={styles.todayBtn} disabled={!title.trim() || add.isPending}>
+        Add
+      </button>
+    </form>
   );
 }
