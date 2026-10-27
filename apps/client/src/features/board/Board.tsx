@@ -140,10 +140,16 @@ function useShortcuts(data: BoardData | undefined) {
       } else if (key === "g") {
         e.preventDefault();
         ui.openCreate("goal", originOf(document.querySelector('section[aria-label="Goals"]')));
-      } else if (key === "c") {
+      } else if (key === "d") {
+        // D: the day view (Today / Tomorrow / This Week).
         e.preventDefault();
         if (ui.calendar) ui.closeCalendar();
-        else {
+      } else if (key === "c" || key === "m") {
+        // M: the month view. C still toggles it.
+        e.preventDefault();
+        if (ui.calendar) {
+          if (key === "c") ui.closeCalendar();
+        } else {
           const icon = document.querySelector('[aria-label="Open calendar"]')?.getBoundingClientRect();
           ui.openCalendar(
             monthKey(data?.dates.today ?? localToday()),

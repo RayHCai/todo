@@ -40,7 +40,7 @@ export function Header({ month }: { month: string }) {
           className={`${styles.ib} ${styles.cal}`}
           aria-label="Open calendar"
           aria-expanded={calendarOpen}
-          aria-keyshortcuts="C"
+          aria-keyshortcuts="M C"
           onClick={openCal}
         >
           <CalendarIcon />
