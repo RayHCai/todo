@@ -1,4 +1,4 @@
-import type { Goal, HistoryResponse, Todo } from "@todo/shared";
+import { GOAL_COLORS, type Goal, type GoalColor, type HistoryResponse, type Todo } from "@todo/shared";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
@@ -18,7 +18,7 @@ import {
 } from "../../lib/dates";
 import { Roll } from "../../motion/Roll";
 import { spring } from "../../motion/tokens";
-import { ChevronIcon, CloseIcon, Frame } from "../../sketch/Sketch";
+import { ChevronIcon, CloseIcon, Frame, PlusIcon } from "../../sketch/Sketch";
 import { useUi } from "../../store/ui";
 import { indexHistory, type DayEntry, type HistoryIndex } from "./history";
 import styles from "./CalendarOverlay.module.css";
@@ -68,6 +68,7 @@ function Calendar({ initialMonth }: { initialMonth: MonthKey }) {
   const [focused, setFocused] = useState<MonthKey>(initialMonth);
   const [detail, setDetail] = useState<IsoDate | null>(null);
   const [weekDetail, setWeekDetail] = useState<IsoDate | null>(null);
+  const [monthDetail, setMonthDetail] = useState<MonthKey | null>(null);
   const [pulse, setPulse] = useState(0);
   const [openWeeks, setOpenWeeks] = useState<Set<IsoDate>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -212,7 +213,7 @@ function Calendar({ initialMonth }: { initialMonth: MonthKey }) {
     });
   }
 
-  // Keys: Esc closes the day detail, then the calendar. ← → step months. T jumps to today.
+  // Keys: Esc closes the day, week or month detail, then the calendar. ← → step months. T jumps to today.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (useUi.getState().modal) return;
@@ -221,6 +222,7 @@ function Calendar({ initialMonth }: { initialMonth: MonthKey }) {
         e.preventDefault();
         if (detail) setDetail(null);
         else if (weekDetail) setWeekDetail(null);
+        else if (monthDetail) setMonthDetail(null);
         else close();
       } else if (typing || e.metaKey || e.ctrlKey || e.altKey) {
         return;
@@ -277,7 +279,7 @@ function Calendar({ initialMonth }: { initialMonth: MonthKey }) {
         ref={scrollRef}
         className={styles.scroll}
         onScroll={onScroll}
-        animate={detail || weekDetail ? { scale: 0.98, opacity: 0.45 } : { scale: 1, opacity: 1 }}
+        animate={detail || weekDetail || monthDetail ? { scale: 0.98, opacity: 0.45 } : { scale: 1, opacity: 1 }}
         transition={spring.smooth}
         role="grid"
         aria-label="Days"
@@ -292,7 +294,12 @@ function Calendar({ initialMonth }: { initialMonth: MonthKey }) {
           return (
             <div key={w}>
               {bannerMonth && bannerMonth >= range.first && (
-                <MonthBanner month={bannerMonth} goals={index.months.get(bannerMonth) ?? []} />
+                <MonthBanner
+                  month={bannerMonth}
+                  goals={index.months.get(bannerMonth) ?? []}
+                  canAdd={bannerMonth >= thisMonth}
+                  onOpen={setMonthDetail}
+                />
               )}
               <WeekRow
                 weekStart={w}
@@ -331,15 +338,49 @@ function Calendar({ initialMonth }: { initialMonth: MonthKey }) {
             onClose={() => setWeekDetail(null)}
           />
         )}
+        {monthDetail && (
+          <MonthDetail
+            key={monthDetail}
+            month={monthDetail}
+            goals={index.months.get(monthDetail) ?? []}
+            past={monthDetail < thisMonth}
+            onClose={() => setMonthDetail(null)}
+          />
+        )}
       </AnimatePresence>
     </div>
   );
 }
 
-function MonthBanner({ month, goals }: { month: MonthKey; goals: Goal[] }) {
+/** The month's name and goals. Clicking the name opens the month; + plans a goal for a coming month. */
+function MonthBanner({
+  month,
+  goals,
+  canAdd,
+  onOpen,
+}: {
+  month: MonthKey;
+  goals: Goal[];
+  canAdd: boolean;
+  onOpen: (month: MonthKey) => void;
+}) {
+  const title = monthTitle(`${month}-01`);
   return (
     <div className={styles.banner} data-banner={month}>
-      <span className={styles.bannerTitle}>{monthTitle(`${month}-01`)}</span>
+      <motion.button
+        layoutId={`month-${month}`}
+        className={styles.bannerTitle}
+        aria-label={`${title}: ${goals.length} ${goals.length === 1 ? "goal" : "goals"}`}
+        onClick={() => onOpen(month)}
+        transition={spring.smooth}
+      >
+        {title}
+      </motion.button>
+      {canAdd && (
+        <button className={styles.addGoal} aria-label={`Add a goal for ${title}`} onClick={() => onOpen(month)}>
+          <PlusIcon />
+        </button>
+      )}
       <ul className={styles.pills}>
         {goals.map((g, i) => (
           <motion.li
@@ -655,6 +696,159 @@ function WeekDetail({
         )}
       </motion.div>
     </div>
+  );
+}
+
+function MonthDetail({
+  month,
+  goals,
+  past,
+  onClose,
+}: {
+  month: MonthKey;
+  goals: Goal[];
+  past: boolean;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  // A coming month focuses the new-goal field instead.
+  useEffect(() => {
+    if (past) ref.current?.focus();
+  }, [past]);
+  const title = monthTitle(`${month}-01`);
+  const groups: [string, Goal[]][] = [
+    [past ? "Unfinished" : "Open", goals.filter((g) => !g.completedAt)],
+    ["Achieved", goals.filter((g) => g.completedAt)],
+  ];
+  return (
+    <div className={styles.detailRoot}>
+      <motion.div
+        className={styles.detailBackdrop}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+      />
+      <motion.div
+        ref={ref}
+        layoutId={`month-${month}`}
+        className={styles.detail}
+        role="dialog"
+        aria-label={`Goals for ${title}`}
+        tabIndex={-1}
+        transition={spring.smooth}
+      >
+        <Frame seed={`month-detail-${month}`} className={styles.detailFrame} a={1.3} />
+        <div className={styles.detailHead}>
+          <h3>{title}</h3>
+          <button className={styles.iconBtn} aria-label="Close month" onClick={onClose}>
+            <CloseIcon />
+          </button>
+        </div>
+        {goals.length === 0 && <p className={styles.nothing}>No goals for this month{past ? "." : " yet."}</p>}
+        {!past && <AddGoal month={month} goals={goals} />}
+        {groups.map(
+          ([heading, items]) =>
+            items.length > 0 && (
+              <section key={heading} className={styles.group}>
+                <h4>
+                  {heading} <span className="tabular">{items.length}</span>
+                </h4>
+                <ul>
+                  {items.map((g) => (
+                    <li key={g.id} className={g.completedAt ? styles.itemDone : undefined}>
+                      <span className={styles.goalDot} style={{ color: `var(--goal-${g.color})` }} aria-hidden="true" />
+                      <span>{g.title}</span>
+                      {g.completedOn && (
+                        <span className={styles.when}>
+                          achieved{" "}
+                          {fromIso(g.completedOn).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ),
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
+/** The first color no open goal of the month uses yet. */
+function freeColor(goals: Goal[], alsoUsed: GoalColor[] = []): GoalColor {
+  const used = new Set([...goals.filter((g) => !g.completedAt).map((g) => g.color), ...alsoUsed]);
+  return GOAL_COLORS.find((c) => !used.has(c)) ?? "amber";
+}
+
+/** Plans a goal for this month or a later one. Unachieved, it carries over like any other. */
+function AddGoal({ month, goals }: { month: MonthKey; goals: Goal[] }) {
+  const qc = useQueryClient();
+  const [title, setTitle] = useState("");
+  const [color, setColor] = useState<GoalColor>(() => freeColor(goals));
+  const add = useMutation({
+    mutationFn: (clean: string) => api.createGoal({ title: clean, color, month: `${month}-01` }),
+    onSuccess: (goal) => {
+      // Show it in the detail and the banner right away; the refetch confirms it.
+      qc.setQueryData<HistoryResponse>(historyKey(month), (h) => (h ? { ...h, goals: [...h.goals, goal] } : h));
+      void qc.invalidateQueries({ queryKey: ["history"] });
+      void qc.invalidateQueries({ queryKey: ["board"] });
+    },
+    onError: (err) =>
+      useUi.getState().pushToast({
+        tone: "error",
+        message: `Couldn't add that goal. ${err instanceof ApiError ? err.message : "Something went wrong."}`,
+      }),
+  });
+  const monthLabel = monthTitle(`${month}-01`);
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const clean = title.trim();
+        if (!clean || add.isPending) return;
+        add.mutate(clean, {
+          onSuccess: () => {
+            setTitle("");
+            setColor(freeColor(goals, [color]));
+          },
+        });
+      }}
+    >
+      <div className={styles.add} style={{ "--acc": `var(--goal-${color})` } as CSSProperties}>
+        <input
+          value={title}
+          maxLength={200}
+          autoFocus
+          placeholder={`Add a goal for ${monthLabel.split(" ")[0]}`}
+          aria-label={`New goal for ${monthLabel}`}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <button type="submit" className={styles.todayBtn} disabled={!title.trim() || add.isPending}>
+          Add
+        </button>
+      </div>
+      <div className={styles.colors} role="radiogroup" aria-label="Color">
+        {GOAL_COLORS.map((c) => (
+          <button
+            key={c}
+            type="button"
+            role="radio"
+            aria-checked={color === c}
+            aria-label={c}
+            className={styles.swatch}
+            style={{ color: `var(--goal-${c})` }}
+            onClick={() => setColor(c)}
+          >
+            <span className={styles.swatchChip} />
+            {color === c && (
+              <motion.span layoutId="month-swatch-ring" className={styles.swatchRing} transition={spring.bouncy} />
+            )}
+          </button>
+        ))}
+      </div>
+    </form>
   );
 }
 

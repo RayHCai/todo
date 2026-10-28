@@ -109,8 +109,53 @@
 
 .bannerTitle {
   flex: none;
+  margin-left: -6px;
+  padding: 4px 6px;
   font: 400 18px/1 var(--hand);
   color: var(--ink-2);
+  transition:
+    background var(--dur-micro),
+    color var(--dur-micro);
+}
+
+.bannerTitle:hover {
+  background: var(--hover);
+  color: var(--ink);
+}
+
+/* Faint until the banner is hovered, so a long scroll of months stays quiet. */
+.addGoal {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-left: -12px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-3);
+  opacity: 0.6;
+  transition:
+    background var(--dur-micro),
+    color var(--dur-micro),
+    opacity var(--dur-micro);
+}
+
+.addGoal svg {
+  width: 11px;
+  height: 11px;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.banner:hover .addGoal {
+  opacity: 1;
+}
+
+.addGoal:hover {
+  background: var(--hover);
+  color: var(--ink);
+}
+
+.addGoal:hover svg {
+  transform: rotate(90deg);
 }
 
 .pills {
@@ -490,4 +535,52 @@
 
 .add button:disabled {
   opacity: 0.4;
+}
+
+.add input:focus {
+  border-bottom-color: var(--acc, var(--ink-3));
+}
+
+.goalDot {
+  flex: none;
+  align-self: center;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 6px 0 4px -6px;
+}
+
+.swatch {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.swatchChip {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: currentColor;
+  transition: transform var(--dur-micro) var(--ease-out);
+}
+
+.swatch:hover .swatchChip {
+  transform: scale(1.18);
+}
+
+.swatchRing {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
 }
