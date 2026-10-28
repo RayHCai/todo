@@ -17,7 +17,12 @@ model Todo {
   title       String    @db.VarChar(200)
   notes       String?   @db.VarChar(2000)
   scope       TodoScope
-  date        DateTime  @db.Date // DAY: the day. WEEK: the Sunday of that week.
+  /// DAY: the day. WEEK: the Sunday of that week. Null only for an undated list task
+  /// (a CHECK constraint in the migration enforces it).
+  date        DateTime? @db.Date
+  /// Set when the todo belongs to a list on the Lists page.
+  listId      String?
+  list        List?     @relation(fields: [listId], references: [id], onDelete: Cascade)
   position    Float // ordering within its list (fractional for cheap reorder)
   completedAt DateTime? @db.Timestamptz
   completedOn DateTime? @db.Date // user-local date it was completed
@@ -26,6 +31,7 @@ model Todo {
 
   @@index([scope, date])
   @@index([completedOn])
+  @@index([listId])
 }
 
 model Goal {
@@ -45,28 +51,13 @@ model Goal {
 }
 
 model List {
-  id        String     @id @default(cuid())
-  name      String     @db.VarChar(60)
-  color     String     @db.VarChar(20) // palette token, validated against GoalColor in shared/
+  id        String   @id @default(cuid())
+  name      String   @db.VarChar(60)
+  color     String   @db.VarChar(20) // palette token, validated against GoalColor in shared/
   position  Float
-  createdAt DateTime   @default(now()) @db.Timestamptz
-  updatedAt DateTime   @updatedAt @db.Timestamptz
-  tasks     ListTask[]
-}
-
-model ListTask {
-  id          String    @id @default(cuid())
-  listId      String
-  list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
-  title       String    @db.VarChar(200)
-  date        DateTime? @db.Date // optional due date; null means "someday"
-  position    Float
-  completedAt DateTime? @db.Timestamptz
-  completedOn DateTime? @db.Date
-  createdAt   DateTime  @default(now()) @db.Timestamptz
-  updatedAt   DateTime  @updatedAt @db.Timestamptz
-
-  @@index([listId])
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  tasks     Todo[]
 }
 
 model Session {

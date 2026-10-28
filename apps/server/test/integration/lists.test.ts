@@ -104,3 +104,37 @@ describe("list tasks", () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe("list tasks on the board and calendar", () => {
+  it("a dated list task is a todo on that day; an undated one stays off the board", async () => {
+    const list = await createList();
+    const someday = await createTask(list.id, { title: "Someday" });
+    const dated = await createTask(list.id, { title: "Dated" });
+    await api.patch(`/api/list-tasks/${dated.id}`, { date: "2026-10-28" });
+
+    const board = (await api.get("/api/board?today=2026-10-28")).body;
+    const today = board.today.active.map((t: { id: string; listId: string }) => [t.id, t.listId]);
+    expect(today).toEqual([[dated.id, list.id]]);
+
+    const history = (await api.get("/api/history?from=2026-10-01&to=2026-10-31")).body;
+    expect(history.todos.map((t: { id: string }) => t.id)).toEqual([dated.id]);
+    expect(history.todos.map((t: { id: string }) => t.id)).not.toContain(someday.id);
+  });
+
+  it("checking it off on the board marks it done on the Lists page", async () => {
+    const list = await createList();
+    const task = await createTask(list.id, { date: "2026-10-28" });
+    await api.patch(`/api/todos/${task.id}`, { completed: true, completedOn: "2026-10-28" });
+    const lists = (await api.get("/api/lists")).body;
+    expect(lists.tasks[0]).toMatchObject({ id: task.id, completedOn: "2026-10-28" });
+  });
+
+  it("restoring a deleted board todo can put it back in its list", async () => {
+    const list = await createList();
+    const res = await api.post("/api/todos", { title: "Back", scope: "DAY", date: "2026-10-28", listId: list.id });
+    expect(res.body.listId).toBe(list.id);
+    expect(
+      (await api.post("/api/todos", { title: "x", scope: "DAY", date: "2026-10-28", listId: "nope" })).status,
+    ).toBe(404);
+  });
+});

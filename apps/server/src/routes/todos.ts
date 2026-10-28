@@ -2,7 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { CreateTodoBody, IdParams, TodoSchema, UpdateTodoBody } from "@todo/shared";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { fromDbDate, normalizeTodoDate, toDbDate } from "../domain/dates";
-import { notFound } from "../lib/errors";
+import { AppError, notFound } from "../lib/errors";
 import { nextTodoPosition, renumberTodosIfCrowded } from "../lib/positions";
 import { emptyToNull, toTodoDto } from "../lib/serialize";
 
@@ -11,6 +11,9 @@ export const todoRoutes: FastifyPluginAsyncZod = async (app) => {
 
   app.post("/todos", { schema: { body: CreateTodoBody, response: { 201: TodoSchema } } }, async (request, reply) => {
     const body = request.body;
+    if (body.listId && !(await prisma.list.findUnique({ where: { id: body.listId }, select: { id: true } }))) {
+      throw notFound("List");
+    }
     const date = toDbDate(normalizeTodoDate(body.scope, body.date));
     const completedOn = body.completed === true ? body.completedOn : undefined;
     const todo = await prisma.todo.create({
@@ -19,6 +22,7 @@ export const todoRoutes: FastifyPluginAsyncZod = async (app) => {
         notes: emptyToNull(body.notes),
         scope: body.scope,
         date,
+        listId: body.listId ?? null,
         position: body.position ?? (await nextTodoPosition(prisma, body.scope, date)),
         completedAt: completedOn ? new Date() : null,
         completedOn: completedOn ? toDbDate(completedOn) : null,
@@ -43,10 +47,13 @@ export const todoRoutes: FastifyPluginAsyncZod = async (app) => {
       // Changing scope or date moves the todo to another column (e.g. "move to tomorrow").
       if (body.scope !== undefined || body.date !== undefined) {
         const scope = body.scope ?? existing.scope;
-        const date = normalizeTodoDate(scope, body.date ?? fromDbDate(existing.date));
+        const existingDate = existing.date ? fromDbDate(existing.date) : null;
+        const target = body.date ?? existingDate;
+        if (!target) throw new AppError(400, "VALIDATION_ERROR", "date: is required to schedule an undated task");
+        const date = normalizeTodoDate(scope, target);
         data.scope = scope;
         data.date = toDbDate(date);
-        const moved = scope !== existing.scope || date !== fromDbDate(existing.date);
+        const moved = scope !== existing.scope || date !== existingDate;
         if (moved && body.position === undefined) {
           data.position = await nextTodoPosition(prisma, scope, toDbDate(date));
         }

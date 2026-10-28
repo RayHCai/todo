@@ -38,7 +38,11 @@ function useCache() {
       if (prev) qc.setQueryData(listsKey, prev);
     },
     settle() {
-      if (qc.isMutating() <= 1) void qc.invalidateQueries({ queryKey: listsKey });
+      if (qc.isMutating() > 1) return;
+      void qc.invalidateQueries({ queryKey: listsKey });
+      // Dated list tasks also show on the board and in the calendar.
+      void qc.invalidateQueries({ queryKey: ["board"] });
+      void qc.invalidateQueries({ queryKey: ["history"] });
     },
   };
 }

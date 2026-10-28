@@ -47,6 +47,15 @@ interface UiState {
 
   page: Page;
   setPage: (page: Page) => void;
+  /** The list the Lists page shows, by id or render key; null until one is picked this session. */
+  list: string | null;
+  setList: (list: string) => void;
+  /** Opens the Lists page on this list. */
+  showList: (list: string) => void;
+
+  /** The Ctrl+K command console. */
+  console: boolean;
+  setConsole: (open: boolean) => void;
 
   modal: ModalState | null;
   openCreate: (type: ItemType, origin?: Origin) => void;
@@ -83,6 +92,12 @@ export const useUi = create<UiState>((set, get) => ({
 
   page: pageFromUrl(),
   setPage: (page) => set({ page }),
+  list: null,
+  setList: (list) => set({ list }),
+  showList: (list) => set({ page: "lists", list }),
+
+  console: false,
+  setConsole: (open) => set({ console: open }),
 
   modal: null,
   openCreate: (type, origin) => set({ modal: { mode: "create", type, origin } }),

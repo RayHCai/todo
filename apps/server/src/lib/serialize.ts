@@ -1,15 +1,20 @@
-import type { Goal as GoalRow, List as ListRow, ListTask as ListTaskRow, Todo as TodoRow } from "@prisma/client";
+import type { Goal as GoalRow, List as ListRow, Todo as TodoRow } from "@prisma/client";
 import type { Goal, GoalColor, List, ListTask, Todo } from "@todo/shared";
 import { fromDbDate } from "../domain/dates";
 
-/** Row → API shape. `carriedOver` starts false; the board sets it from placement rules. */
+/**
+ * Row → API shape. `carriedOver` starts false; the board sets it from placement rules.
+ * Only dated todos have a board shape; queries that feed this filter out undated list tasks.
+ */
 export function toTodoDto(row: TodoRow): Todo {
+  if (!row.date) throw new Error(`Todo ${row.id} has no date`);
   return {
     id: row.id,
     title: row.title,
     notes: row.notes,
     scope: row.scope,
     date: fromDbDate(row.date),
+    listId: row.listId,
     position: row.position,
     completedAt: row.completedAt?.toISOString() ?? null,
     completedOn: row.completedOn ? fromDbDate(row.completedOn) : null,
@@ -46,7 +51,8 @@ export function toListDto(row: ListRow): List {
   };
 }
 
-export function toListTaskDto(row: ListTaskRow): ListTask {
+/** A todo filed under a list, as the Lists page sees it. */
+export function toListTaskDto(row: TodoRow & { listId: string }): ListTask {
   return {
     id: row.id,
     listId: row.listId,

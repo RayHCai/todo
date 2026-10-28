@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma, PrismaClient, Todo as TodoRow } from "@prisma/client";
 import {
   CreateListBody,
   CreateListTaskBody,
@@ -12,8 +12,17 @@ import {
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { toDbDate } from "../domain/dates";
 import { notFound } from "../lib/errors";
-import { nextListPosition, nextListTaskPosition } from "../lib/positions";
+import { nextListPosition, nextListTaskPosition, nextTodoPosition } from "../lib/positions";
 import { toListDto, toListTaskDto } from "../lib/serialize";
+
+/**
+ * List tasks are todos with a `listId`. Dating one makes it a DAY todo on that day, so it shows
+ * on the board and in the calendar; it lands at the bottom of that day's column.
+ */
+const asListTask = (row: TodoRow) => toListTaskDto(row as TodoRow & { listId: string });
+
+const position = (prisma: PrismaClient, listId: string, date: string | null | undefined) =>
+  date ? nextTodoPosition(prisma, "DAY", toDbDate(date)) : nextListTaskPosition(prisma, listId);
 
 export const listRoutes: FastifyPluginAsyncZod = async (app) => {
   const { prisma } = app;
@@ -21,9 +30,12 @@ export const listRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get("/lists", { schema: { response: { 200: ListsResponse } } }, async () => {
     const [lists, tasks] = await Promise.all([
       prisma.list.findMany({ orderBy: [{ position: "asc" }, { createdAt: "asc" }] }),
-      prisma.listTask.findMany({ orderBy: [{ position: "asc" }, { createdAt: "asc" }] }),
+      prisma.todo.findMany({
+        where: { listId: { not: null } },
+        orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+      }),
     ]);
-    return { lists: lists.map(toListDto), tasks: tasks.map(toListTaskDto) };
+    return { lists: lists.map(toListDto), tasks: tasks.map(asListTask) };
   });
 
   app.post("/lists", { schema: { body: CreateListBody, response: { 201: ListSchema } } }, async (request, reply) => {
@@ -46,7 +58,7 @@ export const listRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
-  // Deleting a list deletes its tasks with it (ON DELETE CASCADE).
+  // Deleting a list deletes its tasks with it (ON DELETE CASCADE), dated ones included.
   app.delete("/lists/:id", { schema: { params: IdParams } }, async (request, reply) => {
     const { count } = await prisma.list.deleteMany({ where: { id: request.params.id } });
     if (count === 0) throw notFound("List");
@@ -61,17 +73,18 @@ export const listRoutes: FastifyPluginAsyncZod = async (app) => {
       const list = await prisma.list.findUnique({ where: { id: body.listId }, select: { id: true } });
       if (!list) throw notFound("List");
       const completedOn = body.completed === true ? body.completedOn : undefined;
-      const task = await prisma.listTask.create({
+      const task = await prisma.todo.create({
         data: {
           listId: body.listId,
           title: body.title,
+          scope: "DAY",
           date: body.date ? toDbDate(body.date) : null,
-          position: body.position ?? (await nextListTaskPosition(prisma, body.listId)),
+          position: body.position ?? (await position(prisma, body.listId, body.date)),
           completedAt: completedOn ? new Date() : null,
           completedOn: completedOn ? toDbDate(completedOn) : null,
         },
       });
-      return reply.status(201).send(toListTaskDto(task));
+      return reply.status(201).send(asListTask(task));
     },
   );
 
@@ -81,12 +94,19 @@ export const listRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const { id } = request.params;
       const body = request.body;
-      const existing = await prisma.listTask.findUnique({ where: { id } });
-      if (!existing) throw notFound("Task");
+      const existing = await prisma.todo.findFirst({ where: { id, listId: { not: null } } });
+      if (!existing?.listId) throw notFound("Task");
 
-      const data: Prisma.ListTaskUpdateInput = {};
+      const data: Prisma.TodoUpdateInput = {};
       if (body.title !== undefined) data.title = body.title;
-      if (body.date !== undefined) data.date = body.date === null ? null : toDbDate(body.date);
+      if (body.date !== undefined) {
+        data.date = body.date === null ? null : toDbDate(body.date);
+        if (body.date !== null) {
+          // A picked day is a day, even if the board had it as a week task.
+          data.scope = "DAY";
+          data.position = await position(prisma, existing.listId, body.date);
+        }
+      }
 
       if (body.completed === true && body.completedOn !== undefined) {
         data.completedAt = existing.completedAt ?? new Date();
@@ -96,13 +116,13 @@ export const listRoutes: FastifyPluginAsyncZod = async (app) => {
         data.completedOn = null;
       }
 
-      const task = await prisma.listTask.update({ where: { id }, data });
-      return toListTaskDto(task);
+      const task = await prisma.todo.update({ where: { id }, data });
+      return asListTask(task);
     },
   );
 
   app.delete("/list-tasks/:id", { schema: { params: IdParams } }, async (request, reply) => {
-    const { count } = await prisma.listTask.deleteMany({ where: { id: request.params.id } });
+    const { count } = await prisma.todo.deleteMany({ where: { id: request.params.id, listId: { not: null } } });
     if (count === 0) throw notFound("Task");
     return reply.status(204).send();
   });

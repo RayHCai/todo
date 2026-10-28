@@ -11,6 +11,8 @@ export const TodoSchema = z.object({
   scope: TodoScope,
   /** DAY: the day. WEEK: the Sunday that starts the week. */
   date: IsoDate,
+  /** The Lists page list it belongs to, if any. */
+  listId: z.string().nullable(),
   position: z.number(),
   completedAt: Timestamp.nullable(),
   completedOn: IsoDate.nullable(),
@@ -31,6 +33,8 @@ export const CreateTodoBody = z
     notes: LongText.optional(),
     scope: TodoScope,
     date: IsoDate,
+    /** Files it under a list too (used when "undo delete" restores a list task). */
+    listId: z.string().min(1).max(64).nullable().optional(),
     position: Position.optional(),
     ...completionFields,
   })

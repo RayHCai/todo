@@ -7,6 +7,7 @@ export function todo(over: Partial<Todo> & { id: string; title: string }): Todo 
     notes: null,
     scope: "DAY",
     date: "2026-10-06",
+    listId: null,
     position: 1,
     completedAt: null,
     completedOn: null,

@@ -3,8 +3,10 @@ import { onUnauthorized } from "./api/http";
 import { useSession } from "./api/queries";
 import { LockScreen } from "./features/auth/LockScreen";
 import { Board } from "./features/board/Board";
+import { Console } from "./features/console/Console";
 import { FxLayer } from "./features/fx/FxLayer";
 import { ItemModal } from "./features/modal/ItemModal";
+import { useConsoleShortcut } from "./features/nav/useShortcuts";
 import { Toasts } from "./features/toasts/Toasts";
 import { localToday, msUntilNextMidnight } from "./lib/dates";
 import { useUi } from "./store/ui";
@@ -32,10 +34,11 @@ export function App() {
   // Any 401 from a later request relocks the app and drops the cache.
   useEffect(() => {
     onUnauthorized(() => {
-      const { auth: phase, setAuth: set, closeModal, closeCalendar } = useUi.getState();
+      const { auth: phase, setAuth: set, closeModal, closeCalendar, setConsole } = useUi.getState();
       if (phase !== "open") return;
       closeModal();
       closeCalendar();
+      setConsole(false);
       set("relocking");
     });
     return () => onUnauthorized(null);
@@ -44,6 +47,7 @@ export function App() {
   useMidnightRollover();
   useCalendarFromUrl(auth === "open");
   usePageInUrl();
+  useConsoleShortcut();
 
   const boardVisible = auth === "open" || auth === "unlocking" || auth === "relocking";
   const lockVisible = auth === "locked" || auth === "unlocking" || auth === "relocking";
@@ -65,6 +69,7 @@ export function App() {
           <Suspense fallback={null}>
             <CalendarOverlay />
           </Suspense>
+          <Console />
         </>
       )}
       {lockVisible && <LockScreen />}

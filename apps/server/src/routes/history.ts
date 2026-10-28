@@ -16,6 +16,8 @@ export const historyRoutes: FastifyPluginAsyncZod = async (app) => {
       const [todos, goals] = await Promise.all([
         app.prisma.todo.findMany({
           where: {
+            // Undated list tasks were never planned for a day.
+            date: { not: null },
             OR: [
               { scope: "DAY", date: { gte: fromDb, lte: toDb } },
               // A week overlaps [from, to] when its Sunday is on or after the Sunday of `from`.

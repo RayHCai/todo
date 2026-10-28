@@ -22,7 +22,15 @@ function setup(data: BoardData = board()) {
   });
   qc.setQueryData(boardKey(data.dates.today), data);
   qc.setQueryData(listsKey, lists());
-  useUi.setState({ today: data.dates.today, auth: "open", page: "board", modal: null, calendar: null, toasts: [] });
+  useUi.setState({
+    today: data.dates.today,
+    auth: "open",
+    page: "board",
+    list: null,
+    modal: null,
+    calendar: null,
+    toasts: [],
+  });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );

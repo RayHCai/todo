@@ -15,7 +15,10 @@ export const ListSchema = z.object({
 });
 export type List = z.infer<typeof ListSchema>;
 
-/** A task on a list. Unlike board todos it may have no date ("someday") and never carries over. */
+/**
+ * A task on a list. It is stored as a todo with a `listId`: once it has a date it also shows on the
+ * board and in the calendar. Without one it lives only here ("someday").
+ */
 export const ListTaskSchema = z.object({
   id: z.string(),
   listId: z.string(),

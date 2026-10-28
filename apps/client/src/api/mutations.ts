@@ -53,6 +53,8 @@ function useCache() {
       if (qc.isMutating() <= 1) {
         void qc.invalidateQueries({ queryKey: ["board"] });
         void qc.invalidateQueries({ queryKey: ["history"] });
+        // A list task with a date is on the board too.
+        void qc.invalidateQueries({ queryKey: ["lists"] });
       }
     },
   };
@@ -114,6 +116,7 @@ function createBody(item: Item, restore: boolean): Promise<Item> {
     notes: item.notes,
     scope: item.scope,
     date: item.date,
+    listId: item.listId,
     ...position,
     ...completion,
   });
@@ -276,7 +279,13 @@ export function useEditItem() {
         const now = new Date();
         let moved: Item;
         if (to === "goal") moved = { ...draftGoal(prev, { title, description: notes, color }, now), id: item.id };
-        else moved = { ...draftTodo(prev, to, { title, notes }, now), id: item.id, createdAt: item.createdAt };
+        else
+          moved = {
+            ...draftTodo(prev, to, { title, notes }, now),
+            id: item.id,
+            listId: isGoal(item) ? null : item.listId,
+            createdAt: item.createdAt,
+          };
         cache.set((b) => withActive(withoutItem(b, item.id), listOfType(to), moved));
         useUi.getState().markLanded(keyOf(item.id));
       }

@@ -20,6 +20,7 @@ const todo = {
   position: 1,
   completedAt: null,
   completedOn: null,
+  listId: null,
   carriedOver: false,
   createdAt: "2026-10-06T10:00:00.000Z",
   updatedAt: "2026-10-06T10:00:00.000Z",

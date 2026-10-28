@@ -59,7 +59,9 @@ export function ListsPage() {
   const { data, isPending, isError, error, refetch } = useLists();
   const today = useUi((s) => s.today);
   const createList = useCreateList();
-  const [selected, setSelected] = useState(() => read(SELECTED_KEY) ?? "");
+  const [remembered] = useState(() => read(SELECTED_KEY) ?? "");
+  const selected = useUi((s) => s.list) ?? remembered;
+  const setSelected = useUi((s) => s.setList);
   useShortcuts("lists");
 
   const lists = useMemo(() => data?.lists ?? [], [data]);

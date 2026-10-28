@@ -114,6 +114,7 @@ export function draftTodo(
     notes: fields.notes,
     scope,
     date,
+    listId: null,
     position: nextPosition(board[type].active),
     completedAt: null,
     completedOn: null,
