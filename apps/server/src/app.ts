@@ -20,6 +20,7 @@ import { boardRoutes } from "./routes/board";
 import { goalRoutes } from "./routes/goals";
 import { healthRoutes } from "./routes/health";
 import { historyRoutes } from "./routes/history";
+import { listRoutes } from "./routes/lists";
 import { reminderRoutes } from "./routes/reminders";
 import { todoRoutes } from "./routes/todos";
 
@@ -135,6 +136,7 @@ export async function buildApp(options: AppOptions) {
         await guarded.register(todoRoutes);
         await guarded.register(goalRoutes);
         await guarded.register(historyRoutes);
+        await guarded.register(listRoutes);
       });
     },
     { prefix: "/api" },

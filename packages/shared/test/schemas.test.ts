@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { CreateGoalBody, CreateTodoBody, HistoryQuery, IsoDate, UpdateTodoBody } from "../src/index";
+import {
+  CreateGoalBody,
+  CreateListBody,
+  CreateListTaskBody,
+  CreateTodoBody,
+  HistoryQuery,
+  IsoDate,
+  UpdateListTaskBody,
+  UpdateTodoBody,
+} from "../src/index";
 
 describe("IsoDate", () => {
   it.each(["2026-10-06", "2028-02-29", "2000-02-29"])("accepts %s", (value) => {
@@ -50,5 +59,24 @@ describe("HistoryQuery", () => {
   it("allows a single day and rejects inverted ranges", () => {
     expect(HistoryQuery.safeParse({ from: "2026-10-06", to: "2026-10-06" }).success).toBe(true);
     expect(HistoryQuery.safeParse({ from: "2026-10-07", to: "2026-10-06" }).success).toBe(false);
+  });
+});
+
+describe("list bodies", () => {
+  it("trims list names and caps them at 60 characters", () => {
+    expect(CreateListBody.parse({ name: "  Home ", color: "teal" }).name).toBe("Home");
+    expect(CreateListBody.safeParse({ name: "x".repeat(61), color: "teal" }).success).toBe(false);
+    expect(CreateListBody.safeParse({ name: "Home", color: "chartreuse" }).success).toBe(false);
+  });
+
+  it("lets a task have no date, and clears one with null", () => {
+    expect(CreateListTaskBody.safeParse({ listId: "l1", title: "Buy stamps" }).success).toBe(true);
+    expect(UpdateListTaskBody.parse({ date: null })).toEqual({ date: null });
+    expect(UpdateListTaskBody.safeParse({ date: "2026-02-30" }).success).toBe(false);
+  });
+
+  it("checks completion fields like todos do", () => {
+    expect(UpdateListTaskBody.safeParse({ completed: true }).success).toBe(false);
+    expect(UpdateListTaskBody.safeParse({ completed: true, completedOn: "2026-10-06" }).success).toBe(true);
   });
 });

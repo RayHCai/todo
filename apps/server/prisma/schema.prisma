@@ -44,6 +44,31 @@ model Goal {
   @@index([completedOn])
 }
 
+model List {
+  id        String     @id @default(cuid())
+  name      String     @db.VarChar(60)
+  color     String     @db.VarChar(20) // palette token, validated against GoalColor in shared/
+  position  Float
+  createdAt DateTime   @default(now()) @db.Timestamptz
+  updatedAt DateTime   @updatedAt @db.Timestamptz
+  tasks     ListTask[]
+}
+
+model ListTask {
+  id          String    @id @default(cuid())
+  listId      String
+  list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
+  title       String    @db.VarChar(200)
+  date        DateTime? @db.Date // optional due date; null means "someday"
+  position    Float
+  completedAt DateTime? @db.Timestamptz
+  completedOn DateTime? @db.Date
+  createdAt   DateTime  @default(now()) @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @db.Timestamptz
+
+  @@index([listId])
+}
+
 model Session {
   id                  String   @id @default(cuid())
   tokenHash           String   @unique

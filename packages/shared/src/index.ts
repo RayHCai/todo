@@ -3,6 +3,7 @@ export * from "./board";
 export * from "./errors";
 export * from "./goals";
 export * from "./history";
+export * from "./lists";
 export * from "./primitives";
 export * from "./reminders";
 export * from "./todos";

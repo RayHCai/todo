@@ -26,6 +26,17 @@ export async function nextGoalPosition(prisma: PrismaClient, month: Date): Promi
   return (_max.position ?? 0) + 1;
 }
 
+/** Lists and list tasks only ever append, so they never need renumbering. */
+export async function nextListPosition(prisma: PrismaClient): Promise<number> {
+  const { _max } = await prisma.list.aggregate({ _max: { position: true } });
+  return (_max.position ?? 0) + 1;
+}
+
+export async function nextListTaskPosition(prisma: PrismaClient, listId: string): Promise<number> {
+  const { _max } = await prisma.listTask.aggregate({ _max: { position: true }, where: { listId } });
+  return (_max.position ?? 0) + 1;
+}
+
 const crowdedRange = (position: number) => ({
   gt: position - MIN_POSITION_GAP,
   lt: position + MIN_POSITION_GAP,

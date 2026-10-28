@@ -18,7 +18,7 @@ export function testEnv(overrides: Partial<Record<keyof Env, string>> = {}): Env
 export const prisma = new PrismaClient({ datasourceUrl: process.env.DATABASE_URL });
 
 export async function resetDb(): Promise<void> {
-  await prisma.$executeRawUnsafe('TRUNCATE "Todo", "Goal", "Session"');
+  await prisma.$executeRawUnsafe('TRUNCATE "Todo", "Goal", "ListTask", "List", "Session"');
 }
 
 export function createApp(overrides: Partial<AppOptions> = {}): Promise<App> {
