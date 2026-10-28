@@ -1,0 +1,81 @@
+.pop {
+  position: fixed;
+  z-index: 30;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--bg-raised);
+  color: var(--ink);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 16px 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+.frame {
+  color: var(--acc, var(--ink));
+  stroke-width: 1.8;
+  opacity: 0.55;
+}
+
+.opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font: 400 15px/1.2 var(--hand);
+  color: var(--ink-2);
+  text-align: left;
+  transition:
+    background var(--dur-micro),
+    color var(--dur-micro);
+}
+
+.opt:hover,
+.opt:focus-visible {
+  background: var(--hover);
+  color: var(--ink);
+}
+
+.opt small {
+  flex: none;
+  font: 400 12px/1 var(--body);
+  color: var(--ink-3);
+}
+
+.danger,
+.danger:hover {
+  color: var(--danger);
+}
+
+.divider {
+  margin: 4px 0;
+  border-top: 1px solid var(--line);
+}
+
+.pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  color: var(--ink-3);
+}
+
+.pick svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.pick input {
+  flex: 1;
+  min-width: 0;
+  font: 400 14px/1.2 var(--body);
+  color: var(--ink-2);
+}
+
+.pick input::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+  cursor: pointer;
+}

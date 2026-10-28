@@ -4,14 +4,16 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useToggleComplete } from "../api/mutations";
-import { boardKey } from "../api/queries";
+import { boardKey, listsKey } from "../api/queries";
 import { Board } from "../features/board/Board";
+import { CalendarOverlay } from "../features/calendar/CalendarOverlay";
 import { emitFx } from "../features/fx/fx";
 import { FxLayer } from "../features/fx/FxLayer";
+import { ListsPage } from "../features/lists/ListsPage";
 import { ItemModal } from "../features/modal/ItemModal";
 import type { Board as BoardData } from "../lib/board";
 import { useUi } from "../store/ui";
-import { board } from "./fixtures";
+import { board, lists } from "./fixtures";
 import { setReducedMotion } from "./setup";
 
 function setup(data: BoardData = board()) {
@@ -19,7 +21,8 @@ function setup(data: BoardData = board()) {
     defaultOptions: { queries: { retry: false, staleTime: Infinity }, mutations: { retry: false } },
   });
   qc.setQueryData(boardKey(data.dates.today), data);
-  useUi.setState({ today: data.dates.today, auth: "open", modal: null, calendar: null, toasts: [] });
+  qc.setQueryData(listsKey, lists());
+  useUi.setState({ today: data.dates.today, auth: "open", page: "board", modal: null, calendar: null, toasts: [] });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );
@@ -157,5 +160,110 @@ describe("reduced motion", () => {
       emitFx({ kind: "goal", color: "red", x: 10, y: 10 });
     });
     expect(container.querySelector("svg")).toBeNull();
+  });
+});
+
+describe("lists page", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise(() => {})),
+    );
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("shows one list at a time, split into Scheduled and Someday", async () => {
+    const { wrapper } = setup();
+    render(<ListsPage />, { wrapper });
+    const user = userEvent.setup();
+
+    expect(screen.getByRole("tab", { name: /Home/ })).toHaveAttribute("aria-selected", "true");
+    const pane = screen.getByRole("tabpanel");
+    expect(within(pane).getByRole("heading", { name: "Home" })).toBeInTheDocument();
+    expect(within(pane).getByText("2 open · 1 scheduled")).toBeInTheDocument();
+    expect(
+      within(pane).getByRole("button", { name: "Due Today. Change the date of Fix the hallway light" }),
+    ).toBeInTheDocument();
+    expect(within(pane).getByRole("button", { name: "Add a date to Repot the fern" })).toBeInTheDocument();
+    // Done is folded away.
+    expect(within(pane).queryByText("Hang the print")).toBeNull();
+    await user.click(within(pane).getByRole("button", { name: /Done/ }));
+    expect(within(pane).getByText("Hang the print")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: /Work/ }));
+    expect(within(screen.getByRole("tabpanel")).getByRole("heading", { name: "Work" })).toBeInTheDocument();
+    expect(screen.getByText("Write the roadmap")).toBeInTheDocument();
+  });
+
+  it("adds a task and dates it, moving it from Someday to Scheduled", async () => {
+    const { wrapper } = setup();
+    render(<ListsPage />, { wrapper });
+    const user = userEvent.setup();
+
+    await user.keyboard("n");
+    expect(screen.getByLabelText("Add a task to Home")).toHaveFocus();
+    await user.keyboard("Buy stamps{Enter}");
+    expect(screen.getByLabelText("Add a task to Home")).toHaveValue("");
+    expect(screen.getByRole("button", { name: "Buy stamps" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Add a date to Buy stamps" }));
+    const picker = screen.getByRole("dialog", { name: "Date for Buy stamps" });
+    await user.click(within(picker).getByRole("button", { name: /Tomorrow/ }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByRole("button", { name: "Due Tomorrow. Change the date of Buy stamps" })).toBeInTheDocument();
+    expect(screen.getByText("3 open · 2 scheduled")).toBeInTheDocument();
+  });
+
+  it("creates a list from the rail and selects it", async () => {
+    const { qc, wrapper } = setup();
+    render(<ListsPage />, { wrapper });
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: "New list" }));
+    await user.keyboard("Reading{Enter}");
+    expect(screen.getByRole("tab", { name: /Reading/ })).toHaveAttribute("aria-selected", "true");
+    // The first color no other list uses.
+    expect(qc.getQueryData<{ lists: { name: string; color: string }[] }>(listsKey)?.lists.at(-1)).toMatchObject({
+      name: "Reading",
+      color: "amber",
+    });
+  });
+
+  it("L opens the Lists page and D goes back to the board", async () => {
+    const { wrapper } = setup();
+    const { unmount } = render(<Board />, { wrapper });
+    const user = userEvent.setup();
+    await user.keyboard("l");
+    expect(useUi.getState().page).toBe("lists");
+    unmount();
+
+    render(<ListsPage />, { wrapper });
+    await user.keyboard("d");
+    expect(useUi.getState().page).toBe("board");
+  });
+});
+
+describe("calendar month goals", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("plans a goal for a coming month from its banner", async () => {
+    const fetchMock = vi.fn((_url: string, _init?: RequestInit) => new Promise<Response>(() => {}));
+    vi.stubGlobal("fetch", fetchMock);
+    const { wrapper } = setup();
+    act(() => useUi.getState().openCalendar("2026-10"));
+    render(<CalendarOverlay />, { wrapper });
+    const user = userEvent.setup();
+
+    // Past months can be opened but not planned.
+    expect(screen.queryByRole("button", { name: "Add a goal for September 2026" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Add a goal for November 2026" }));
+    const detail = await screen.findByRole("dialog", { name: "Goals for November 2026" });
+    expect(within(detail).getByText("No goals for this month yet.")).toBeInTheDocument();
+    await user.click(within(detail).getByRole("radio", { name: "rose" }));
+    await user.type(within(detail).getByLabelText("New goal for November 2026"), "Run a 10k{Enter}");
+
+    const call = fetchMock.mock.calls.find(([url, init]) => url === "/api/goals" && init?.method === "POST");
+    expect(JSON.parse(String(call?.[1]?.body))).toEqual({ title: "Run a 10k", color: "rose", month: "2026-11-01" });
   });
 });

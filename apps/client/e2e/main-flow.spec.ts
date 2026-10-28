@@ -83,11 +83,25 @@ test("main flow: add, complete, goals, calendar, lock", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(calendar).toHaveCount(0);
 
-  // Lock: the curtains close and the lock screen is back.
-  await page.getByRole("button", { name: "Lock" }).click();
-  await page.waitForTimeout(500);
-  await expect(page.getByLabel("Password")).toBeVisible();
-  await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
+  // L opens the Lists page: make a list, add a task, give it a date.
+  await page.keyboard.press("l");
+  await expect(page).toHaveURL(/\?view=lists/);
+  await page.getByRole("button", { name: "New list" }).click();
+  await page.getByLabel("New list name").fill("E2E list");
+  await page.getByLabel("New list name").press("Enter");
+  await expect(page.getByRole("tab", { name: /E2E list/ })).toHaveAttribute("aria-selected", "true");
+  await page.getByLabel("Add a task to E2E list").fill("E2E list task");
+  await page.getByLabel("Add a task to E2E list").press("Enter");
+  await page.getByRole("button", { name: "Add a date to E2E list task" }).click();
+  await page
+    .getByRole("dialog", { name: "Date for E2E list task" })
+    .getByRole("button", { name: /Tomorrow/ })
+    .click();
+  await expect(page.getByRole("button", { name: /^Due Tomorrow/ })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("tab", { name: /E2E list/ })).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("d");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
 test("delete shows an undo toast that restores the item", async ({ page }) => {

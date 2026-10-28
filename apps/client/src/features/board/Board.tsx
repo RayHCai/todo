@@ -2,12 +2,12 @@ import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { useBoard } from "../../api/queries";
 import { COLUMN_KEYS, type Board as BoardData, type ColumnKey } from "../../lib/board";
-import { dayLabel, localToday, longDayLabel, monthKey, weekRangeLabel } from "../../lib/dates";
+import { dayLabel, longDayLabel, monthTitle, weekRangeLabel } from "../../lib/dates";
 import { startEntrance } from "../../motion/entrance";
 import { spring } from "../../motion/tokens";
-import { originOf, useUi } from "../../store/ui";
 import { TodoColumn } from "../columns/TodoColumn";
 import { GoalsCarousel } from "../goals/GoalsCarousel";
+import { useShortcuts } from "../nav/useShortcuts";
 import { Header } from "./Header";
 import { Skeleton } from "./Skeleton";
 import styles from "./Board.module.css";
@@ -17,7 +17,7 @@ const TITLES: Record<ColumnKey, string> = { today: "Today", tomorrow: "Tomorrow"
 export function Board() {
   const { data, isPending, isError, error, refetch } = useBoard(true);
   useEffect(() => startEntrance(), []);
-  useShortcuts(data);
+  useShortcuts("board");
 
   if (isPending) return <Skeleton />;
   if (isError || !data) {
@@ -32,7 +32,7 @@ export function Board() {
   return (
     <main className={styles.page}>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }}>
-        <Header month={data.dates.month} />
+        <Header title={monthTitle(data.dates.month)} page="board" />
       </motion.div>
       <motion.div
         initial={{ opacity: 0, x: 24 }}
@@ -119,46 +119,4 @@ function Columns({ data }: { data: BoardData }) {
       </div>
     </>
   );
-}
-
-/** N new todo · G new goal · C calendar. (T and ← → belong to the calendar while it's open.) */
-function useShortcuts(data: BoardData | undefined) {
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      const ui = useUi.getState();
-      const t = e.target;
-      if (e.metaKey || e.ctrlKey || e.altKey || ui.modal || ui.auth !== "open") return;
-      if (
-        t instanceof HTMLElement &&
-        (t.matches("input:not([type=checkbox]), textarea, select") || t.isContentEditable)
-      )
-        return;
-      const key = e.key.toLowerCase();
-      if (key === "n") {
-        e.preventDefault();
-        ui.openCreate("today", originOf(document.querySelector('[data-column="today"] button')));
-      } else if (key === "g") {
-        e.preventDefault();
-        ui.openCreate("goal", originOf(document.querySelector('section[aria-label="Goals"]')));
-      } else if (key === "d") {
-        // D: the day view (Today / Tomorrow / This Week).
-        e.preventDefault();
-        if (ui.calendar) ui.closeCalendar();
-      } else if (key === "c" || key === "m") {
-        // M: the month view. C still toggles it.
-        e.preventDefault();
-        if (ui.calendar) {
-          if (key === "c") ui.closeCalendar();
-        } else {
-          const icon = document.querySelector('[aria-label="Open calendar"]')?.getBoundingClientRect();
-          ui.openCalendar(
-            monthKey(data?.dates.today ?? localToday()),
-            icon ? { x: icon.left + icon.width / 2, y: icon.top + icon.height / 2 } : undefined,
-          );
-        }
-      }
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [data]);
 }

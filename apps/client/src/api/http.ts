@@ -3,13 +3,22 @@ import {
   ErrorBody,
   GoalSchema,
   HistoryResponse,
+  ListSchema,
+  ListsResponse,
+  ListTaskSchema,
   SessionResponse,
   TodoSchema,
   type CreateGoalBody,
+  type CreateListBody,
+  type CreateListTaskBody,
   type CreateTodoBody,
   type Goal,
+  type List,
+  type ListTask,
   type Todo,
   type UpdateGoalBody,
+  type UpdateListBody,
+  type UpdateListTaskBody,
   type UpdateTodoBody,
 } from "@todo/shared";
 import type { z } from "zod";
@@ -96,4 +105,16 @@ export const api = {
   updateGoal: (id: string, body: UpdateGoalBody): Promise<Goal> =>
     request("PATCH", `/goals/${encodeURIComponent(id)}`, { body, schema: GoalSchema }),
   deleteGoal: (id: string) => request("DELETE", `/goals/${encodeURIComponent(id)}`),
+
+  lists: () => request("GET", "/lists", { schema: ListsResponse }),
+  createList: (body: CreateListBody): Promise<List> => request("POST", "/lists", { body, schema: ListSchema }),
+  updateList: (id: string, body: UpdateListBody): Promise<List> =>
+    request("PATCH", `/lists/${encodeURIComponent(id)}`, { body, schema: ListSchema }),
+  deleteList: (id: string) => request("DELETE", `/lists/${encodeURIComponent(id)}`),
+
+  createListTask: (body: CreateListTaskBody): Promise<ListTask> =>
+    request("POST", "/list-tasks", { body, schema: ListTaskSchema }),
+  updateListTask: (id: string, body: UpdateListTaskBody): Promise<ListTask> =>
+    request("PATCH", `/list-tasks/${encodeURIComponent(id)}`, { body, schema: ListTaskSchema }),
+  deleteListTask: (id: string) => request("DELETE", `/list-tasks/${encodeURIComponent(id)}`),
 };

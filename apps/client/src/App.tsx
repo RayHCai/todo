@@ -9,16 +9,18 @@ import { Toasts } from "./features/toasts/Toasts";
 import { localToday, msUntilNextMidnight } from "./lib/dates";
 import { useUi } from "./store/ui";
 
-// The calendar is the biggest feature and only needed on demand.
+// The calendar is the biggest feature and only needed on demand, as is the Lists page.
 const CalendarOverlay = lazy(() =>
   import("./features/calendar/CalendarOverlay").then((m) => ({ default: m.CalendarOverlay })),
 );
+const ListsPage = lazy(() => import("./features/lists/ListsPage").then((m) => ({ default: m.ListsPage })));
 
 export function App() {
   const session = useSession();
   const auth = useUi((s) => s.auth);
   const setAuth = useUi((s) => s.setAuth);
   const announcement = useUi((s) => s.announcement);
+  const page = useUi((s) => s.page);
 
   // While the session check is pending, only the background shows (no content flash).
   useEffect(() => {
@@ -41,6 +43,7 @@ export function App() {
 
   useMidnightRollover();
   useCalendarFromUrl(auth === "open");
+  usePageInUrl();
 
   const boardVisible = auth === "open" || auth === "unlocking" || auth === "relocking";
   const lockVisible = auth === "locked" || auth === "unlocking" || auth === "relocking";
@@ -48,7 +51,14 @@ export function App() {
   return (
     <>
       <FxLayer />
-      {boardVisible && <Board />}
+      {boardVisible &&
+        (page === "lists" ? (
+          <Suspense fallback={null}>
+            <ListsPage />
+          </Suspense>
+        ) : (
+          <Board />
+        ))}
       {auth === "open" && (
         <>
           <ItemModal />
@@ -98,4 +108,15 @@ function useCalendarFromUrl(ready: boolean) {
     const month = new URL(window.location.href).searchParams.get("calendar");
     if (month && /^\d{4}-\d{2}$/.test(month)) useUi.getState().openCalendar(month);
   }, [ready]);
+}
+
+/** Mirrors the page to `?view=lists`, so a refresh stays on the Lists page. */
+function usePageInUrl() {
+  const page = useUi((s) => s.page);
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (page === "lists") url.searchParams.set("view", "lists");
+    else url.searchParams.delete("view");
+    window.history.replaceState(null, "", url);
+  }, [page]);
 }

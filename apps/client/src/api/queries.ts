@@ -6,6 +6,7 @@ import { api } from "./http";
 export const sessionKey = ["session"] as const;
 export const boardKey = (today: string) => ["board", today] as const;
 export const historyKey = (month: MonthKey) => ["history", month] as const;
+export const listsKey = ["lists"] as const;
 
 export function useSession() {
   return useQuery({ queryKey: sessionKey, queryFn: api.session, staleTime: Infinity, retry: 1 });
@@ -39,4 +40,9 @@ export function useHistoryMonths(months: MonthKey[]) {
       staleTime: 60_000,
     })),
   });
+}
+
+/** Every list and task. Small enough to load whole; the Lists page derives everything from it. */
+export function useLists() {
+  return useQuery({ queryKey: listsKey, queryFn: api.lists, staleTime: 30_000 });
 }

@@ -1,0 +1,192 @@
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 36px;
+  padding: 6px 8px;
+  border-radius: var(--r-row);
+  transition:
+    background var(--dur-micro),
+    color var(--dur-base),
+    translate var(--dur-micro);
+}
+
+/* A thin bar in the list's color grows on the left edge on hover. */
+.row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--acc, var(--ink-3));
+  transform: scaleY(0);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.row:hover {
+  background: var(--hover);
+  translate: 0 -1px;
+}
+
+.row:hover::before {
+  transform: scaleY(1);
+}
+
+.title {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 2px;
+  text-align: left;
+  border-radius: 4px;
+  cursor: text;
+}
+
+.text {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--dur-base);
+}
+
+.strike {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 6px;
+  margin-top: -3px;
+  opacity: 0.85;
+  pointer-events: none;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 198ms ease-out 126ms;
+}
+
+.checked .strike {
+  clip-path: inset(0 -2px 0 -2px);
+}
+
+.checked .text {
+  color: var(--ink-3);
+}
+
+.edit {
+  flex: 1;
+  min-width: 0;
+  padding: 0 2px;
+  border-bottom: 1px dashed var(--ink-3);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  flex: none;
+  color: var(--ink-3);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  font: 400 12px/1 var(--hand);
+  white-space: nowrap;
+  color: var(--ink-3);
+  transition:
+    background var(--dur-micro),
+    color var(--dur-micro),
+    opacity var(--dur-micro),
+    transform var(--dur-base) var(--ease-out);
+}
+
+.chip:hover,
+.chip[aria-expanded="true"] {
+  background: var(--hover);
+  color: var(--ink);
+}
+
+.chip svg {
+  width: 12px;
+  height: 12px;
+}
+
+.late {
+  color: var(--danger);
+}
+
+/* Undated rows stay clean; "Add date" and delete only show on hover. */
+.undated,
+.del {
+  opacity: 0;
+  transform: translateX(6px);
+}
+
+.row:hover .undated,
+.row:hover .del,
+.undated:focus-visible,
+.undated[aria-expanded="true"],
+.del:focus-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.del {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-3);
+  transition:
+    background var(--dur-micro),
+    color var(--dur-micro),
+    opacity var(--dur-micro),
+    transform var(--dur-base) var(--ease-out);
+}
+
+.del:hover {
+  background: var(--hover);
+  color: var(--danger);
+}
+
+.del svg {
+  width: 10px;
+  height: 10px;
+}
+
+.landed::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-row);
+  background: var(--acc, var(--ink));
+  opacity: 0;
+  animation: glow 0.9s ease-out;
+  pointer-events: none;
+}
+
+@keyframes glow {
+  0%,
+  15% {
+    opacity: 0.12;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* No hover on touch screens: keep the controls visible. */
+@media (max-width: 639px), (hover: none) {
+  .undated,
+  .del {
+    opacity: 1;
+    transform: none;
+  }
+}

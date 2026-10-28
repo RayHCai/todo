@@ -80,14 +80,9 @@
   height: 20px;
 }
 
-.sm {
-  width: 30px;
-  height: 30px;
-}
-
-.sm svg {
-  width: 16px;
-  height: 16px;
+/* The page you're on. */
+.on {
+  color: var(--ink);
 }
 
 /* Calendar: the top "page" flips forward like a tear-off calendar. */
@@ -101,20 +96,25 @@
   transform: scaleY(-1) translateY(-6px);
 }
 
-/* Lock: the shackle lifts on hover and snaps shut on click. */
-.ib :global(.shackle) {
+/* Board: the columns lean apart. Lists: the last line shortens, as if still being written. */
+.ib :global(.col-a),
+.ib :global(.col-b),
+.ib :global(.row) {
   transform-box: fill-box;
-  transform-origin: left bottom;
-  transition: transform 162ms var(--ease-out);
+  transform-origin: left center;
+  transition: transform 234ms var(--ease-out);
 }
 
-.sm:hover :global(.shackle) {
-  transform: translateY(-2px);
+.ib:hover :global(.col-a) {
+  transform: translateX(-1px);
 }
 
-.shut :global(.shackle) {
-  transform: translateY(1px) !important;
-  transition-duration: 81ms;
+.ib:hover :global(.col-b) {
+  transform: translateX(1px);
+}
+
+.ib:hover :global(.row) {
+  transform: scaleX(0.6);
 }
 
 @media (max-width: 639px) {

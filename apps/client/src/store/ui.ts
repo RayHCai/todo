@@ -31,12 +31,22 @@ export interface Toast {
 /** checking → (unlocking) → open → (relocking) → locked */
 export type AuthPhase = "checking" | "locked" | "unlocking" | "open" | "relocking";
 
+/** The board (Today / Tomorrow / This Week) or the Lists page. */
+export type Page = "board" | "lists";
+
+/** `?view=lists` reopens the Lists page after a refresh. */
+const pageFromUrl = (): Page =>
+  new URLSearchParams(window.location.search).get("view") === "lists" ? "lists" : "board";
+
 interface UiState {
   today: string;
   setToday: (today: string) => void;
 
   auth: AuthPhase;
   setAuth: (phase: AuthPhase) => void;
+
+  page: Page;
+  setPage: (page: Page) => void;
 
   modal: ModalState | null;
   openCreate: (type: ItemType, origin?: Origin) => void;
@@ -70,6 +80,9 @@ export const useUi = create<UiState>((set, get) => ({
 
   auth: "checking",
   setAuth: (auth) => set({ auth }),
+
+  page: pageFromUrl(),
+  setPage: (page) => set({ page }),
 
   modal: null,
   openCreate: (type, origin) => set({ modal: { mode: "create", type, origin } }),

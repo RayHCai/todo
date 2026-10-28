@@ -1,4 +1,4 @@
-import type { BoardResponse, Goal, Todo } from "@todo/shared";
+import type { BoardResponse, Goal, ListsResponse, ListTask, Todo } from "@todo/shared";
 
 const stamp = "2026-10-01T09:00:00.000Z";
 
@@ -54,5 +54,39 @@ export function board(): BoardResponse {
     },
     tomorrow: { active: [todo({ id: "t4", title: "Gym", date: "2026-10-07" })], completed: [] },
     week: { active: [todo({ id: "t5", title: "Pay rent", scope: "WEEK", date: "2026-10-04" })], completed: [] },
+  };
+}
+
+export function listTask(over: Partial<ListTask> & { id: string; listId: string; title: string }): ListTask {
+  return {
+    date: null,
+    position: 1,
+    completedAt: null,
+    completedOn: null,
+    createdAt: stamp,
+    updatedAt: stamp,
+    ...over,
+  };
+}
+
+export function lists(): ListsResponse {
+  return {
+    lists: [
+      { id: "home", name: "Home", color: "teal", position: 1, createdAt: stamp, updatedAt: stamp },
+      { id: "work", name: "Work", color: "indigo", position: 2, createdAt: stamp, updatedAt: stamp },
+    ],
+    tasks: [
+      listTask({ id: "l1", listId: "home", title: "Fix the hallway light", date: "2026-10-06" }),
+      listTask({ id: "l2", listId: "home", title: "Repot the fern", position: 2 }),
+      listTask({
+        id: "l3",
+        listId: "home",
+        title: "Hang the print",
+        position: 3,
+        completedAt: stamp,
+        completedOn: "2026-10-01",
+      }),
+      listTask({ id: "l4", listId: "work", title: "Write the roadmap", date: "2026-10-09" }),
+    ],
   };
 }

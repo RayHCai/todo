@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { arc, ellipse, line, rect, rng, tick, wob } from "./paths";
+import { ellipse, line, rect, rng, tick, wob } from "./paths";
 
 interface SvgProps {
   className?: string;
@@ -72,25 +72,64 @@ export function CalendarIcon(props: SvgProps) {
   );
 }
 
-export function LockIcon(props: SvgProps) {
-  const [body, shackle] = usePaths("lock", (r) => [
+/** Three columns: the board. */
+export function BoardIcon(props: SvgProps) {
+  const [frame, a, b] = usePaths("board", (r) => [
+    rect(24, 24, r, 4, 0.7),
     wob(
       [
-        [5, 10.5],
-        [19, 10.5],
-        [19, 20.5],
-        [5, 20.5],
-        [5, 9.5],
+        [9.5, 4.5],
+        [9.5, 19.5],
       ],
       r,
-      0.5,
+      0.4,
     ),
-    wob(arc(12, 10.5, 4, Math.PI, Math.PI * 2, 8), r, 0.35),
+    wob(
+      [
+        [14.5, 4.5],
+        [14.5, 19.5],
+      ],
+      r,
+      0.4,
+    ),
   ]);
   return (
     <Svg w={24} h={24} {...props}>
-      <path d={body} />
-      <path d={shackle} className="shackle" />
+      <path d={frame} />
+      <path d={a} className="col-a" />
+      <path d={b} className="col-b" />
+    </Svg>
+  );
+}
+
+/** Two ticked-off rows: the Lists page. */
+export function ListIcon(props: SvgProps) {
+  const [box1, line1, box2, line2] = usePaths("list", (r) => [
+    rect(7, 7, r, 1, 0.5),
+    wob(
+      [
+        [13, 7.5],
+        [21, 7.5],
+      ],
+      r,
+      0.4,
+    ),
+    rect(7, 7, r, 1, 0.5),
+    wob(
+      [
+        [13, 16.5],
+        [21, 16.5],
+      ],
+      r,
+      0.4,
+    ),
+  ]);
+  return (
+    <Svg w={24} h={24} {...props}>
+      <path d={box1} transform="translate(3 4)" />
+      <path d={line1} />
+      <path d={box2} transform="translate(3 13)" />
+      <path d={line2} className="row" />
     </Svg>
   );
 }

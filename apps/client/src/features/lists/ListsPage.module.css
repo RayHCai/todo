@@ -1,0 +1,455 @@
+/* Unlike the board, whose columns scroll on their own, the Lists page scrolls as a whole. */
+.scroller {
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+/* Same frame as the board, so the header doesn't move when switching pages. */
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-block: 40px 64px;
+  padding-inline: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Clears the marker loop, which overhangs the title by 16px. */
+.sub {
+  margin: -8px 0 0 26px;
+  font: 400 14px/1.2 var(--hand);
+  color: var(--ink-3);
+}
+
+.note {
+  margin: 0;
+  font: 400 16px/1.3 var(--hand);
+  color: var(--ink-3);
+}
+
+.failed {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  font: 400 18px/1.4 var(--hand);
+  color: var(--ink-2);
+}
+
+.failed p {
+  margin: 0;
+}
+
+.failed button {
+  padding: 6px 14px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 48px;
+  align-items: start;
+}
+
+/* ---------------- rail ---------------- */
+
+.rail {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.railBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 12px;
+  font: 400 19px/1.2 var(--hand);
+  color: var(--ink-3);
+  text-align: left;
+  border-radius: 8px;
+  transition:
+    color var(--dur-micro),
+    background var(--dur-micro);
+}
+
+.railBtn:hover {
+  color: var(--ink-2);
+  background: var(--hover);
+}
+
+.railBtn[aria-selected="true"] {
+  color: var(--ink);
+}
+
+.dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--acc);
+  opacity: 0.9;
+}
+
+.railName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.count {
+  margin-left: auto;
+  font: 400 13px/1 var(--body);
+  color: var(--ink-3);
+}
+
+.ring {
+  position: absolute;
+  left: -8px;
+  top: -4px;
+  width: calc(100% + 16px);
+  height: calc(100% + 8px);
+  color: var(--acc);
+  stroke-width: 2;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.newList {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  font: 400 16px/1.2 var(--hand);
+  color: var(--ink-3);
+  text-align: left;
+  border-radius: 8px;
+  transition:
+    color var(--dur-micro),
+    background var(--dur-micro);
+}
+
+.newList:hover {
+  color: var(--ink-2);
+  background: var(--hover);
+}
+
+.newList svg {
+  width: 11px;
+  height: 11px;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.newList:hover svg {
+  transform: rotate(90deg);
+}
+
+.newInput {
+  min-width: 0;
+  margin: 0 12px;
+  padding: 6px 0;
+  font: 400 19px/1.2 var(--hand);
+  border-bottom: 1px dashed var(--ink-3);
+}
+
+/* ---------------- pane ---------------- */
+
+.pane {
+  min-width: 0;
+}
+
+.paneHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.name {
+  display: flex;
+  min-width: 0;
+  margin: 0;
+  font: 400 30px/1.15 var(--hand);
+}
+
+.nameBtn {
+  min-width: 0;
+  margin-left: -6px;
+  padding: 0 6px;
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+  transition: background var(--dur-micro);
+}
+
+.nameBtn:hover {
+  background: var(--hover);
+}
+
+.nameInput {
+  width: 100%;
+  margin-left: -6px;
+  padding: 0 6px;
+  font: inherit;
+  border-bottom: 1px dashed var(--ink-3);
+}
+
+.menuBtn {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  transition: background var(--dur-micro);
+}
+
+.menuBtn:hover,
+.menuBtn[aria-expanded="true"] {
+  background: var(--hover);
+}
+
+.menuDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--acc);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.menuBtn:hover .menuDot {
+  transform: scale(1.3);
+}
+
+.lead {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.grp {
+  margin-top: 20px;
+}
+
+.grpHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 0 8px 6px;
+  font: 400 14px/1.2 var(--hand);
+  color: var(--ink-3);
+}
+
+.rule {
+  flex: 1;
+  height: 6px;
+  align-self: center;
+  opacity: 0.5;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.none {
+  padding: 6px 8px;
+  font: 400 15px/1.3 var(--hand);
+  color: var(--ink-3);
+}
+
+.add {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 6px 8px;
+  border-radius: var(--r-row);
+  color: var(--ink-3);
+  transition: color var(--dur-micro);
+}
+
+.add:focus-within {
+  color: var(--ink-2);
+}
+
+.plus {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+}
+
+.plus svg {
+  width: 11px;
+  height: 11px;
+}
+
+.add input {
+  flex: 1;
+  min-width: 0;
+  padding: 0 2px;
+}
+
+.doneHead {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 2px;
+  padding: 4px 8px;
+  font: 400 14px/1.2 var(--hand);
+  color: var(--ink-3);
+  transition:
+    background var(--dur-micro),
+    color var(--dur-micro);
+}
+
+.doneHead:hover {
+  background: var(--hover);
+  color: var(--ink-2);
+}
+
+.chev {
+  width: 10px;
+  height: 10px;
+  transition: transform var(--dur-micro);
+}
+
+.doneHead[aria-expanded="false"] .chev {
+  transform: rotate(-90deg);
+}
+
+/* ---------------- list options ---------------- */
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  justify-items: center;
+  gap: 4px;
+  padding: 2px 0 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.swatch {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.swatchChip {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: currentColor;
+  transition: transform var(--dur-micro) var(--ease-out);
+}
+
+.swatch:hover .swatchChip {
+  transform: scale(1.18);
+}
+
+.swatchRing {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+}
+
+@media (max-width: 1023px) {
+  .page {
+    padding-inline: 32px;
+  }
+
+  .split {
+    grid-template-columns: 170px minmax(0, 1fr);
+    gap: 32px;
+  }
+}
+
+@media (max-width: 639px) {
+  .scroller {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+
+  .page {
+    padding-inline: 16px;
+    padding-block: 24px 48px;
+    gap: 20px;
+  }
+
+  .sub {
+    margin: -6px 0 0 16px;
+  }
+
+  .split {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* The rail turns into a strip that scrolls sideways. */
+  .rail {
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+    margin-inline: -16px;
+    padding: 6px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tabs {
+    flex-direction: row;
+  }
+
+  .railBtn {
+    flex: none;
+    font-size: 17px;
+  }
+
+  .newList {
+    flex: none;
+  }
+
+  .newInput {
+    flex: none;
+    width: 140px;
+    font-size: 17px;
+  }
+
+  .name {
+    font-size: 26px;
+  }
+}

@@ -1,40 +1,42 @@
 import { AnimatePresence, motion, useAnimate, useReducedMotion } from "motion/react";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { api } from "../../api/http";
-import { monthKey, monthTitle } from "../../lib/dates";
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { monthKey } from "../../lib/dates";
 import { spring } from "../../motion/tokens";
 import { ellipse, rng } from "../../sketch/paths";
-import { CalendarIcon, LockIcon } from "../../sketch/Sketch";
-import { useUi } from "../../store/ui";
+import { BoardIcon, CalendarIcon, ListIcon } from "../../sketch/Sketch";
+import { useUi, type Page } from "../../store/ui";
 import styles from "./Header.module.css";
 
-export function Header({ month }: { month: string }) {
+export function Header({ title, page }: { title: string; page: Page }) {
   const openCalendar = useUi((s) => s.openCalendar);
-  const setAuth = useUi((s) => s.setAuth);
+  const setPage = useUi((s) => s.setPage);
+  const today = useUi((s) => s.today);
   const calendarOpen = useUi((s) => s.calendar !== null);
-  const [locking, setLocking] = useState(false);
   const calRef = useRef<HTMLButtonElement>(null);
 
   function openCal() {
     const r = calRef.current?.getBoundingClientRect();
-    openCalendar(monthKey(month), r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : undefined);
+    openCalendar(monthKey(today), r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : undefined);
   }
 
-  async function lock() {
-    setLocking(true);
-    // The shackle snaps shut, then the curtains close.
-    window.setTimeout(() => setAuth("relocking"), 162);
-    try {
-      await api.logout();
-    } catch {
-      // Already signed out on the server; the relock still happens.
-    }
-  }
+  const pageButton = (target: Page, label: string, shortcut: string, icon: ReactNode) => (
+    <button
+      className={`${styles.ib} ${page === target ? styles.on : ""}`}
+      aria-label={label}
+      aria-current={page === target ? "page" : undefined}
+      aria-keyshortcuts={shortcut}
+      onClick={() => setPage(target)}
+    >
+      {icon}
+    </button>
+  );
 
   return (
     <header className={styles.header}>
-      <MonthTitle text={monthTitle(month)} />
-      <div className={styles.icons}>
+      <PageTitle text={title} />
+      <nav className={styles.icons} aria-label="Pages">
+        {pageButton("board", "Board", "D", <BoardIcon />)}
+        {pageButton("lists", "Lists", "L", <ListIcon />)}
         <button
           ref={calRef}
           className={`${styles.ib} ${styles.cal}`}
@@ -45,19 +47,16 @@ export function Header({ month }: { month: string }) {
         >
           <CalendarIcon />
         </button>
-        <button className={`${styles.ib} ${styles.sm} ${locking ? styles.shut : ""}`} aria-label="Lock" onClick={lock}>
-          <LockIcon />
-        </button>
-      </div>
+      </nav>
     </header>
   );
 }
 
 /**
- * "October 2026", circled twice in marker. Letters reveal from beneath a mask on entrance,
- * ripple on hover, and roll like an odometer when the month changes.
+ * "October 2026" (or "Lists"), circled twice in marker. Letters reveal from beneath a mask on
+ * entrance, ripple on hover, and roll like an odometer when the month changes.
  */
-function MonthTitle({ text }: { text: string }) {
+function PageTitle({ text }: { text: string }) {
   const reduced = useReducedMotion();
   const ref = useRef<HTMLHeadingElement>(null);
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
