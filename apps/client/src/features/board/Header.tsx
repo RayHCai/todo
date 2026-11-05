@@ -66,10 +66,10 @@ function PageTitle({ text }: { text: string }) {
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    // Matches the loop's CSS box: it overhangs the title by 30px/16px (18px/10px on phones).
+    // Matches the loop's CSS box: it overhangs the title by 30px/16px (12px/10px on phones).
     const measure = () => {
       const small = window.innerWidth < 640;
-      setSize({ w: el.offsetWidth + (small ? 36 : 60), h: el.offsetHeight + (small ? 20 : 32) });
+      setSize({ w: el.offsetWidth + (small ? 24 : 60), h: el.offsetHeight + (small ? 20 : 32) });
     };
     measure();
     void document.fonts?.ready.then(measure);

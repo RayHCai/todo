@@ -118,15 +118,21 @@
 }
 
 @media (max-width: 639px) {
+  /* Wider than the loop's overhang, so the loop never reaches the icons. */
+  .header {
+    gap: 20px;
+  }
+
+  /* Shrinks with the viewport so the longest month ("September 2026") still fits beside the icons. */
   .title {
-    font-size: 32px;
-    padding: 8px 16px;
+    font-size: clamp(18px, 13vw - 24px, 32px);
+    padding: 8px 14px;
   }
 
   .loop {
-    left: -18px;
+    left: -12px;
     top: -10px;
-    width: calc(100% + 36px);
+    width: calc(100% + 24px);
     height: calc(100% + 20px);
   }
 }
