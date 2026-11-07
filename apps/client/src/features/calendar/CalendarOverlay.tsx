@@ -515,24 +515,26 @@ const DayCell = memo(function DayCell({
       onClick={() => onOpen(day)}
       transition={spring.smooth}
     >
-      <span className={`${styles.date} tabular`}>{fromIso(day).getDate()}</span>
-      <ul className={styles.items}>
-        {items.slice(0, 3).map((t) => (
-          <li
-            key={t.id}
-            className={
-              t.completedAt && entry?.completed.includes(t)
-                ? styles.itemDone
-                : entry?.missed.includes(t)
-                  ? styles.itemMissed
-                  : undefined
-            }
-          >
-            {t.title}
-          </li>
-        ))}
-        {items.length > 3 && <li className={styles.more}>+{items.length - 3} more</li>}
-      </ul>
+      <span className={styles.cellBody}>
+        <span className={`${styles.date} tabular`}>{fromIso(day).getDate()}</span>
+        <ul className={styles.items}>
+          {items.slice(0, 3).map((t) => (
+            <li
+              key={t.id}
+              className={
+                t.completedAt && entry?.completed.includes(t)
+                  ? styles.itemDone
+                  : entry?.missed.includes(t)
+                    ? styles.itemMissed
+                    : undefined
+              }
+            >
+              {t.title}
+            </li>
+          ))}
+          {items.length > 3 && <li className={styles.more}>+{items.length - 3} more</li>}
+        </ul>
+      </span>
       {meter !== null && (
         <span className={styles.meter} aria-hidden="true">
           <span style={{ transform: `scaleX(${meter})` }} />

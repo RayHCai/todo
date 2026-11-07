@@ -202,15 +202,28 @@
   height: 104px;
   min-width: 0;
   padding: 6px 8px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
   text-align: left;
   border-radius: var(--r-row);
   background: color-mix(in srgb, var(--goal-emerald) calc(var(--heat) * 16%), var(--hover));
   transition:
     translate var(--dur-micro) var(--ease-out),
     opacity var(--dur-base);
+}
+
+/*
+ * Positioned against the cell's own box, so its width never depends on how a browser lays out
+ * a button's contents (some size them to the text). It clips anything that doesn't fit, while
+ * the tip and pulse stay outside it and can still reach past the cell.
+ */
+.cellBody {
+  position: absolute;
+  inset: 0;
+  padding: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+  border-radius: inherit;
 }
 
 /* The hover shadow is pre-rendered and faded in, so hovering never repaints a box-shadow per frame. */
